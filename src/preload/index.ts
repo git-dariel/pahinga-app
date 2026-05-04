@@ -1,12 +1,22 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { SETTINGS_IPC_CHANNELS } from '../shared/ipc'
+import type { UserSettings, UserSettingsUpdate } from '../shared/types'
 
-// Custom APIs for renderer
-const api = {}
+const pahinga = {
+  getSettings(): Promise<UserSettings> {
+    return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.GET)
+  },
+  updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
+    return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.UPDATE, patch)
+  },
+  isOnboardingComplete(): Promise<boolean> {
+    return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE)
+  }
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
+const api = { pahinga }
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
@@ -15,8 +25,8 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
-  // @ts-ignore (define in dts)
+  // @ts-expect-error Dev-only bridge when `contextIsolation` is disabled
   window.electron = electronAPI
-  // @ts-ignore (define in dts)
+  // @ts-expect-error Dev-only bridge when `contextIsolation` is disabled
   window.api = api
 }

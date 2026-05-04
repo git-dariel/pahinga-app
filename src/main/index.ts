@@ -1,8 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { getDatabase, closeDatabase } from './database/connection'
+import { registerPahingaIpc } from './ipc/registerPahingaIpc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -42,13 +43,12 @@ function createWindow(): void {
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')
 
-  getDatabase()
+  const db = getDatabase()
+  registerPahingaIpc(db)
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-
-  ipcMain.on('ping', () => console.log('pong'))
 
   createWindow()
 

@@ -65,30 +65,30 @@ The backend/main process should handle local database operations, reminder logic
 
 ## Frontend TODO
 
-- [ ] Create TypeScript interfaces for:
-  - [ ] User settings
-  - [ ] Focus session
-  - [ ] Reminder
-  - [ ] Stretch log
-  - [ ] Daily summary
-- [ ] Create renderer API service wrapper for IPC calls.
-- [ ] Add loading and error states for data fetching.
-- [ ] Add basic toast or notification UI component.
+- [x] Create TypeScript interfaces for:
+  - [x] User settings
+  - [x] Focus session
+  - [x] Reminder
+  - [x] Stretch log
+  - [x] Daily summary
+- [x] Create renderer API service wrapper for IPC calls.
+- [x] Add loading and error states for data fetching.
+- [x] Add basic toast or notification UI component.
 
 ## Backend TODO
 
-- [ ] Create `user_settings` table.
-- [ ] Create `focus_sessions` table.
-- [ ] Create `reminders` table.
-- [ ] Create `stretch_logs` table.
-- [ ] Create settings repository.
-- [ ] Create focus session repository.
-- [ ] Create reminder repository.
-- [ ] Create stretch log repository.
-- [ ] Add default user settings seed.
-- [ ] Add migration for initial schema.
-- [ ] Add database helper for timestamps.
-- [ ] Add repository error handling.
+- [x] Create `user_settings` table.
+- [x] Create `focus_sessions` table.
+- [x] Create `reminders` table.
+- [x] Create `stretch_logs` table.
+- [x] Create settings repository.
+- [x] Create focus session repository.
+- [x] Create reminder repository.
+- [x] Create stretch log repository.
+- [x] Add default user settings seed.
+- [x] Add migration for initial schema.
+- [x] Add database helper for timestamps.
+- [x] Add repository error handling.
 
 ---
 
@@ -96,28 +96,28 @@ The backend/main process should handle local database operations, reminder logic
 
 ## Frontend TODO
 
-- [ ] Create Welcome screen.
-- [ ] Create Work Style setup screen.
-- [ ] Create Reminder Preferences setup screen.
-- [ ] Create Finish Setup screen.
-- [ ] Add onboarding stepper state.
-- [ ] Validate selected work style.
-- [ ] Validate reminder preference values.
-- [ ] Save onboarding preferences through IPC.
-- [ ] Redirect user to Dashboard after setup.
-- [ ] Add first-time user check.
-- [ ] Skip onboarding if settings already exist.
+- [x] Create Welcome screen.
+- [x] Create Work Style setup screen.
+- [x] Create Reminder Preferences setup screen.
+- [x] Create Finish Setup screen.
+- [x] Add onboarding stepper state.
+- [x] Validate selected work style.
+- [x] Validate reminder preference values.
+- [x] Save onboarding preferences through IPC.
+- [x] Redirect user to Dashboard after setup.
+- [x] Add first-time user check.
+- [x] Skip onboarding if settings already exist.
 
 ## Backend TODO
 
-- [ ] Create service for getting user settings.
-- [ ] Create service for updating user settings.
-- [ ] Create IPC handler: `settings:get`.
-- [ ] Create IPC handler: `settings:update`.
-- [ ] Create IPC handler: `settings:isOnboardingComplete`.
-- [ ] Store onboarding completion status.
-- [ ] Return default settings if no settings exist yet.
-- [ ] Validate settings payload before saving.
+- [x] Create service for getting user settings.
+- [x] Create service for updating user settings.
+- [x] Create IPC handler: `settings:get`.
+- [x] Create IPC handler: `settings:update`.
+- [x] Create IPC handler: `settings:isOnboardingComplete`.
+- [x] Store onboarding completion status.
+- [x] Return default settings if no settings exist yet.
+- [x] Validate settings payload before saving.
 
 ---
 

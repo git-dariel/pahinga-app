@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import { app } from 'electron'
 import { join } from 'path'
 import { runMigrations } from './migrations'
+import { seedDefaultUserSettings } from './seed'
 
 let db: Database.Database | null = null
 
@@ -12,6 +13,7 @@ export function getDatabase(): Database.Database {
     db.pragma('journal_mode = WAL')
     db.pragma('foreign_keys = ON')
     runMigrations(db)
+    seedDefaultUserSettings(db)
   }
   return db
 }
