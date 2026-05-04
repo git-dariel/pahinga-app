@@ -20,8 +20,8 @@ const pahinga = {
   getDashboardToday(): Promise<DashboardToday> {
     return ipcRenderer.invoke(DASHBOARD_IPC_CHANNELS.GET_TODAY)
   },
-  sessionStart(): Promise<DashboardToday> {
-    return ipcRenderer.invoke(SESSION_IPC_CHANNELS.START)
+  sessionStart(payload?: { plannedMinutes?: number }): Promise<DashboardToday> {
+    return ipcRenderer.invoke(SESSION_IPC_CHANNELS.START, payload)
   },
   sessionPause(): Promise<DashboardToday> {
     return ipcRenderer.invoke(SESSION_IPC_CHANNELS.PAUSE)
@@ -29,8 +29,14 @@ const pahinga = {
   sessionResume(): Promise<DashboardToday> {
     return ipcRenderer.invoke(SESSION_IPC_CHANNELS.RESUME)
   },
-  sessionEnd(completed: boolean): Promise<DashboardToday> {
-    return ipcRenderer.invoke(SESSION_IPC_CHANNELS.END, { completed })
+  sessionEnd(): Promise<DashboardToday> {
+    return ipcRenderer.invoke(SESSION_IPC_CHANNELS.END)
+  },
+  sessionCancel(): Promise<DashboardToday> {
+    return ipcRenderer.invoke(SESSION_IPC_CHANNELS.CANCEL)
+  },
+  sessionSkip(): Promise<DashboardToday> {
+    return ipcRenderer.invoke(SESSION_IPC_CHANNELS.SKIP)
   }
 }
 

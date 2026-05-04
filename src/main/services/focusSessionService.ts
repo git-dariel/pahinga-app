@@ -2,6 +2,9 @@ import type { FocusSession, UserSettings } from '../../shared/types'
 import { nowIso } from '../database/timestamps'
 import type { FocusSessionRepository } from '../repositories/focusSessionRepository'
 
+const MIN_FOCUS_MINUTES = 1
+const MAX_FOCUS_MINUTES = 180
+
 type Live = {
   sessionId: number
   paused: boolean
@@ -30,6 +33,11 @@ export function createFocusSessionService(
 ) {
   let live: Live | null = null
 
+  function getTargetMinutes(session: FocusSession): number {
+    const settings = getSettings()
+    return session.targetMinutes ?? settings.focusDuration
+  }
+
   function syncLiveWithDb(): FocusSession | null {
     const active = focusRepo.findActive()
     if (!active) {
@@ -52,8 +60,7 @@ export function createFocusSessionService(
       syncLiveWithDb()
     }
     if (!live) return 0
-    const settings = getSettings()
-    const targetSec = settings.focusDuration * 60
+    const targetSec = getTargetMinutes(session) * 60
     const started = Date.parse(session.startedAt)
     const elapsed = nowMs - started
     const effectiveWorkMs = Math.max(0, elapsed - effectivePauseMs(live, nowMs))
@@ -71,14 +78,52 @@ export function createFocusSessionService(
     return effectiveWorkMs / 60000
   }
 
+  function finalizeCompleted(session: FocusSession): void {
+    const target = getTargetMinutes(session)
+    focusRepo.updateById(session.id, {
+      endedAt: nowIso(),
+      durationMinutes: target,
+      status: 'completed'
+    })
+    live = null
+  }
+
+  function finalizeEarlyExit(status: 'cancelled' | 'skipped'): void {
+    const session = syncLiveWithDb()
+    if (!session || !live) throw new Error('No active focus session.')
+    const nowMs = Date.now()
+    const effectiveMs = Math.max(0, nowMs - Date.parse(session.startedAt) - effectivePauseMs(live, nowMs))
+    const durationMinutes = Math.max(1, Math.round(effectiveMs / 60000))
+    focusRepo.updateById(session.id, {
+      endedAt: nowIso(),
+      durationMinutes,
+      status
+    })
+    live = null
+  }
+
   return {
     syncLiveWithDb,
 
-    start(): FocusSession {
+    start(options?: { plannedMinutes?: number }): FocusSession {
       if (focusRepo.findActive()) {
         throw new Error('A focus session is already running.')
       }
-      const session = focusRepo.create({})
+      const settings = getSettings()
+      const target =
+        options?.plannedMinutes !== undefined ? options.plannedMinutes : settings.focusDuration
+      if (
+        typeof target !== 'number' ||
+        !Number.isInteger(target) ||
+        target < MIN_FOCUS_MINUTES ||
+        target > MAX_FOCUS_MINUTES
+      ) {
+        throw new Error(`Focus duration must be an integer between ${MIN_FOCUS_MINUTES} and ${MAX_FOCUS_MINUTES} minutes.`)
+      }
+
+      const session = focusRepo.create({
+        targetMinutes: target
+      })
       live = {
         sessionId: session.id,
         paused: false,
@@ -109,28 +154,21 @@ export function createFocusSessionService(
       return session
     },
 
-    end(completed: boolean): void {
+    /** Mark session completed (timer done or explicit). Idempotent if already idle. */
+    complete(): void {
       const session = syncLiveWithDb()
-      if (!session || !live) throw new Error('No active focus session.')
-      const nowMs = Date.now()
-      const settings = getSettings()
-      const effectiveMs = Math.max(0, nowMs - Date.parse(session.startedAt) - effectivePauseMs(live, nowMs))
-      const durationMinutes = Math.max(1, Math.round(effectiveMs / 60000))
+      if (!session || !live) return
+      finalizeCompleted(session)
+    },
 
-      if (completed) {
-        focusRepo.updateById(session.id, {
-          endedAt: nowIso(),
-          durationMinutes: settings.focusDuration,
-          status: 'completed'
-        })
-      } else {
-        focusRepo.updateById(session.id, {
-          endedAt: nowIso(),
-          durationMinutes: durationMinutes,
-          status: 'cancelled'
-        })
-      }
-      live = null
+    /** User ends the session early (cancelled). */
+    cancel(): void {
+      finalizeEarlyExit('cancelled')
+    },
+
+    /** Early exit recorded as skipped (for analytics / future flows). */
+    skip(): void {
+      finalizeEarlyExit('skipped')
     },
 
     /** Completes the session when the focus timer reaches zero (still focusing). */
@@ -139,13 +177,7 @@ export function createFocusSessionService(
       if (!session || !live || live.paused) return
       const nowMs = Date.now()
       if (getFocusRemainingSeconds(session, nowMs) > 0) return
-      const settings = getSettings()
-      focusRepo.updateById(session.id, {
-        endedAt: nowIso(),
-        durationMinutes: settings.focusDuration,
-        status: 'completed'
-      })
-      live = null
+      finalizeCompleted(session)
     },
 
     getMetrics(

@@ -9,7 +9,7 @@ export function useDashboard(): {
   status: Status
   error: Error | null
   refresh: () => Promise<void>
-  startSession: () => Promise<void>
+  startSession: (plannedMinutes?: number) => Promise<void>
   pauseSession: () => Promise<void>
   resumeSession: () => Promise<void>
   stopSession: () => Promise<void>
@@ -42,8 +42,10 @@ export function useDashboard(): {
     return () => clearInterval(id)
   }, [refresh, data?.sessionPhase])
 
-  const startSession = useCallback(async () => {
-    const next = await pahingaApi.sessionStart()
+  const startSession = useCallback(async (plannedMinutes?: number) => {
+    const next = await pahingaApi.sessionStart(
+      plannedMinutes !== undefined ? { plannedMinutes } : undefined
+    )
     setData(next)
     setError(null)
     setStatus('ready')
@@ -64,7 +66,7 @@ export function useDashboard(): {
   }, [])
 
   const stopSession = useCallback(async () => {
-    const next = await pahingaApi.sessionEnd(false)
+    const next = await pahingaApi.sessionCancel()
     setData(next)
     setError(null)
     setStatus('ready')

@@ -14,6 +14,7 @@ type FocusSessionRow = {
   ended_at: string | null
   duration_minutes: number | null
   status: string
+  target_minutes: number | null
 }
 
 function mapRow(row: FocusSessionRow): FocusSession {
@@ -22,14 +23,15 @@ function mapRow(row: FocusSessionRow): FocusSession {
     startedAt: row.started_at,
     endedAt: row.ended_at,
     durationMinutes: row.duration_minutes,
-    status: row.status as FocusSessionStatus
+    status: row.status as FocusSessionStatus,
+    targetMinutes: row.target_minutes ?? null
   }
 }
 
 export function createFocusSessionRepository(db: Database.Database) {
   const insert = db.prepare(`
-    INSERT INTO focus_sessions (started_at, status)
-    VALUES (@started_at, COALESCE(@status, 'in_progress'))
+    INSERT INTO focus_sessions (started_at, status, target_minutes)
+    VALUES (@started_at, COALESCE(@status, 'in_progress'), @target_minutes)
   `)
 
   const update = db.prepare(`
@@ -69,7 +71,8 @@ export function createFocusSessionRepository(db: Database.Database) {
       try {
         const result = insert.run({
           started_at: input.startedAt ?? nowIso(),
-          status: input.status ?? null
+          status: input.status ?? null,
+          target_minutes: input.targetMinutes ?? null
         })
         const id = Number(result.lastInsertRowid)
         const row = getById.get(id) as FocusSessionRow | undefined

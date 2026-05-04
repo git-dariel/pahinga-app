@@ -57,4 +57,11 @@ export function runMigrations(db: Database.Database): void {
 
     db.prepare('INSERT INTO schema_migrations (version) VALUES (?)').run(1)
   }
+
+  if (currentVersion < 2) {
+    db.exec(`
+      ALTER TABLE focus_sessions ADD COLUMN target_minutes INTEGER;
+    `)
+    db.prepare('INSERT INTO schema_migrations (version) VALUES (?)').run(2)
+  }
 }

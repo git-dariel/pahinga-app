@@ -155,32 +155,32 @@ The backend/main process should handle local database operations, reminder logic
 
 ## Frontend TODO
 
-- [ ] Create Focus Timer page.
-- [ ] Add timer countdown component.
-- [ ] Add duration selector.
-- [ ] Add Start button.
-- [ ] Add Pause button.
-- [ ] Add Resume button.
-- [ ] Add End Session button.
-- [ ] Show current session status.
-- [ ] Show completion message when timer ends.
-- [ ] Add option to start break after focus session.
-- [ ] Save completed session through IPC.
-- [ ] Save cancelled session through IPC.
+- [x] Create Focus Timer page.
+- [x] Add timer countdown component.
+- [x] Add duration selector.
+- [x] Add Start button.
+- [x] Add Pause button.
+- [x] Add Resume button.
+- [x] Add End Session button.
+- [x] Show current session status.
+- [x] Show completion message when timer ends.
+- [x] Add option to start break after focus session.
+- [x] Save completed session through IPC.
+- [x] Save cancelled session through IPC.
 
 ## Backend TODO
 
-- [ ] Create focus session service.
-- [ ] Create method to start focus session.
-- [ ] Create method to end focus session.
-- [ ] Create method to cancel focus session.
-- [ ] Create IPC handler: `session:start`.
-- [ ] Create IPC handler: `session:end`.
-- [ ] Create IPC handler: `session:cancel`.
-- [ ] Store session start time.
-- [ ] Store session end time.
-- [ ] Calculate duration in minutes.
-- [ ] Save session status as completed, cancelled, or skipped.
+- [x] Create focus session service.
+- [x] Create method to start focus session.
+- [x] Create method to end focus session.
+- [x] Create method to cancel focus session.
+- [x] Create IPC handler: `session:start`.
+- [x] Create IPC handler: `session:end`.
+- [x] Create IPC handler: `session:cancel`.
+- [x] Store session start time.
+- [x] Store session end time.
+- [x] Calculate duration in minutes.
+- [x] Save session status as completed, cancelled, or skipped.
 
 ---
 

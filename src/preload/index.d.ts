@@ -6,10 +6,12 @@ export interface PahingaPreloadApi {
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings>
   isOnboardingComplete(): Promise<boolean>
   getDashboardToday(): Promise<DashboardToday>
-  sessionStart(): Promise<DashboardToday>
+  sessionStart(payload?: { plannedMinutes?: number }): Promise<DashboardToday>
   sessionPause(): Promise<DashboardToday>
   sessionResume(): Promise<DashboardToday>
-  sessionEnd(completed: boolean): Promise<DashboardToday>
+  sessionEnd(): Promise<DashboardToday>
+  sessionCancel(): Promise<DashboardToday>
+  sessionSkip(): Promise<DashboardToday>
 }
 
 export interface AppPreloadApi {

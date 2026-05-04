@@ -24,8 +24,8 @@ export const pahingaApi = {
     return getPahinga().getDashboardToday()
   },
 
-  sessionStart(): Promise<DashboardToday> {
-    return getPahinga().sessionStart()
+  sessionStart(payload?: { plannedMinutes?: number }): Promise<DashboardToday> {
+    return getPahinga().sessionStart(payload)
   },
 
   sessionPause(): Promise<DashboardToday> {
@@ -36,7 +36,28 @@ export const pahingaApi = {
     return getPahinga().sessionResume()
   },
 
-  sessionEnd(completed: boolean): Promise<DashboardToday> {
-    return getPahinga().sessionEnd(completed)
+  sessionEnd(): Promise<DashboardToday> {
+    return getPahinga().sessionEnd()
+  },
+
+  sessionCancel(): Promise<DashboardToday> {
+    const pahinga = getPahinga() as {
+      sessionCancel?: () => Promise<DashboardToday>
+      sessionEnd?: ((completed: boolean) => Promise<DashboardToday>) | (() => Promise<DashboardToday>)
+    }
+    if (typeof pahinga.sessionCancel === 'function') {
+      return pahinga.sessionCancel()
+    }
+    const end = pahinga.sessionEnd
+    if (typeof end === 'function' && end.length >= 1) {
+      return (end as (completed: boolean) => Promise<DashboardToday>)(false)
+    }
+    throw new Error(
+      'Session API is out of date. Quit the app completely (all windows), then start it again with pnpm dev.'
+    )
+  },
+
+  sessionSkip(): Promise<DashboardToday> {
+    return getPahinga().sessionSkip()
   }
 }

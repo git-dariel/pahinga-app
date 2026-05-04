@@ -17,7 +17,12 @@ export const SESSION_IPC_CHANNELS = {
   START: 'session:start',
   PAUSE: 'session:pause',
   RESUME: 'session:resume',
-  END: 'session:end'
+  /** Mark session completed (timer finished or explicit). Idempotent. */
+  END: 'session:end',
+  /** User stops early — saved as cancelled. */
+  CANCEL: 'session:cancel',
+  /** Early exit recorded as skipped (same timing rules as cancel). */
+  SKIP: 'session:skip'
 } as const
 
 export type UserSettingsUpdatePayload = UserSettingsUpdate
