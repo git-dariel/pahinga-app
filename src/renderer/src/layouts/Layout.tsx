@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LayoutDashboard, Timer, Activity, BarChart2, Settings } from 'lucide-react'
+import type { BreakReminderTriggerPayload } from '@shared/types'
+import { BreakReminderModal } from '@renderer/components/BreakReminderModal'
+import { pahingaApi } from '@renderer/services/pahingaApi'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,6 +14,12 @@ const navItems = [
 ]
 
 export default function Layout(): React.JSX.Element {
+  const [breakReminder, setBreakReminder] = useState<BreakReminderTriggerPayload | null>(null)
+
+  useEffect(() => {
+    return pahingaApi.onBreakReminderTrigger((payload) => setBreakReminder(payload))
+  }, [])
+
   return (
     <div className="flex h-screen bg-background">
       <aside className="w-60 flex flex-col bg-surface border-r border-border shrink-0">
@@ -45,6 +55,8 @@ export default function Layout(): React.JSX.Element {
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
+
+      <BreakReminderModal payload={breakReminder} onDismiss={() => setBreakReminder(null)} />
     </div>
   )
 }

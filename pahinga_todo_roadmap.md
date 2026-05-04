@@ -188,31 +188,31 @@ The backend/main process should handle local database operations, reminder logic
 
 ## Frontend TODO
 
-- [ ] Create Break Reminder modal.
-- [ ] Add reminder title and message.
-- [ ] Add Start Break button.
-- [ ] Add Snooze 5 min button.
-- [ ] Add Skip button.
-- [ ] Create break timer UI.
-- [ ] Show break completed state.
-- [ ] Add return to Dashboard option.
-- [ ] Update daily summary after reminder action.
-- [ ] Add soft animation for modal opening.
+- [x] Create Break Reminder modal.
+- [x] Add reminder title and message.
+- [x] Add Start Break button.
+- [x] Add Snooze 5 min button.
+- [x] Add Skip button.
+- [x] Create break timer UI.
+- [x] Show break completed state.
+- [x] Add return to Dashboard option.
+- [x] Update daily summary after reminder action.
+- [x] Add soft animation for modal opening.
 
 ## Backend TODO
 
-- [ ] Create reminder service.
-- [ ] Create break reminder scheduler.
-- [ ] Create IPC event for break reminder trigger.
-- [ ] Create IPC handler: `reminder:complete`.
-- [ ] Create IPC handler: `reminder:snooze`.
-- [ ] Create IPC handler: `reminder:skip`.
-- [ ] Store reminder type as `break`.
-- [ ] Store reminder status.
-- [ ] Store reminder triggered time.
-- [ ] Store reminder completed time.
-- [ ] Add snooze scheduling logic.
-- [ ] Trigger desktop notification for break reminder.
+- [x] Create reminder service.
+- [x] Create break reminder scheduler.
+- [x] Create IPC event for break reminder trigger.
+- [x] Create IPC handler: `reminder:complete`.
+- [x] Create IPC handler: `reminder:snooze`.
+- [x] Create IPC handler: `reminder:skip`.
+- [x] Store reminder type as `break`.
+- [x] Store reminder status.
+- [x] Store reminder triggered time.
+- [x] Store reminder completed time.
+- [x] Add snooze scheduling logic.
+- [x] Trigger desktop notification for break reminder.
 
 ---
 

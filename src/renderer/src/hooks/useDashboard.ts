@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DashboardToday } from '@shared/types'
+import { DASHBOARD_REFRESH_EVENT } from '@renderer/lib/dashboardEvents'
 import { pahingaApi } from '@renderer/services/pahingaApi'
 
 type Status = 'loading' | 'ready' | 'error'
@@ -32,6 +33,14 @@ export function useDashboard(): {
 
   useEffect(() => {
     void refresh()
+  }, [refresh])
+
+  useEffect(() => {
+    const onRefresh = (): void => {
+      void refresh()
+    }
+    window.addEventListener(DASHBOARD_REFRESH_EVENT, onRefresh)
+    return () => window.removeEventListener(DASHBOARD_REFRESH_EVENT, onRefresh)
   }, [refresh])
 
   useEffect(() => {

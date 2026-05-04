@@ -1,4 +1,9 @@
-import type { DashboardToday, UserSettings, UserSettingsUpdate } from '@shared/types'
+import type {
+  BreakReminderTriggerPayload,
+  DashboardToday,
+  UserSettings,
+  UserSettingsUpdate
+} from '@shared/types'
 
 function getPahinga(): Window['api']['pahinga'] {
   if (typeof window === 'undefined' || !window.api?.pahinga) {
@@ -59,5 +64,21 @@ export const pahingaApi = {
 
   sessionSkip(): Promise<DashboardToday> {
     return getPahinga().sessionSkip()
+  },
+
+  reminderComplete(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().reminderComplete(reminderId)
+  },
+
+  reminderSnooze(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().reminderSnooze(reminderId)
+  },
+
+  reminderSkip(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().reminderSkip(reminderId)
+  },
+
+  onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void {
+    return getPahinga().onBreakReminderTrigger(callback)
   }
 }

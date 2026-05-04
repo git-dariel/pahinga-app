@@ -1,5 +1,10 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import type { DashboardToday, UserSettings, UserSettingsUpdate } from '../shared/types'
+import type {
+  BreakReminderTriggerPayload,
+  DashboardToday,
+  UserSettings,
+  UserSettingsUpdate
+} from '../shared/types'
 
 export interface PahingaPreloadApi {
   getSettings(): Promise<UserSettings>
@@ -12,6 +17,10 @@ export interface PahingaPreloadApi {
   sessionEnd(): Promise<DashboardToday>
   sessionCancel(): Promise<DashboardToday>
   sessionSkip(): Promise<DashboardToday>
+  reminderComplete(reminderId: number): Promise<DashboardToday>
+  reminderSnooze(reminderId: number): Promise<DashboardToday>
+  reminderSkip(reminderId: number): Promise<DashboardToday>
+  onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void
 }
 
 export interface AppPreloadApi {

@@ -1,19 +1,29 @@
-import { ipcMain } from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
 import type Database from 'better-sqlite3'
 import {
   DASHBOARD_IPC_CHANNELS,
+  REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS
 } from '../../shared/ipc'
 import { createFocusSessionRepository } from '../repositories/focusSessionRepository'
 import { createReminderRepository } from '../repositories/reminderRepository'
 import { createStretchLogRepository } from '../repositories/stretchLogRepository'
+import { createBreakReminderActions } from '../services/breakReminderActions'
+import { createBreakReminderScheduler } from '../services/breakReminderScheduler'
 import { createDashboardService } from '../services/dashboardService'
 import { createFocusSessionService } from '../services/focusSessionService'
 import { createSettingsService } from '../services/settingsService'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function sanitizeReminderId(raw: unknown): number {
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1) {
+    throw new Error('Invalid reminder id.')
+  }
+  return raw
 }
 
 function sanitizeSessionStartPayload(payload: unknown): { plannedMinutes?: number } | undefined {
@@ -33,13 +43,25 @@ function sanitizeSessionStartPayload(payload: unknown): { plannedMinutes?: numbe
   return { plannedMinutes: v }
 }
 
-export function registerPahingaIpc(db: Database.Database): void {
+export function registerPahingaIpc(
+  db: Database.Database,
+  getMainWindow: () => BrowserWindow | null
+): void {
   const settingsService = createSettingsService(db)
   const focusRepo = createFocusSessionRepository(db)
   const reminderRepo = createReminderRepository(db)
   const stretchRepo = createStretchLogRepository(db)
 
   const focusSessionService = createFocusSessionService(focusRepo, () => settingsService.get())
+  const breakReminderActions = createBreakReminderActions(reminderRepo)
+  const breakReminderScheduler = createBreakReminderScheduler({
+    reminderRepo,
+    focusSessionService,
+    settingsService,
+    getMainWindow
+  })
+  breakReminderScheduler.start()
+
   const dashboardService = createDashboardService(
     settingsService,
     focusRepo,
@@ -58,6 +80,9 @@ export function registerPahingaIpc(db: Database.Database): void {
   ipcMain.removeHandler(SESSION_IPC_CHANNELS.END)
   ipcMain.removeHandler(SESSION_IPC_CHANNELS.CANCEL)
   ipcMain.removeHandler(SESSION_IPC_CHANNELS.SKIP)
+  ipcMain.removeHandler(REMINDER_IPC_CHANNELS.COMPLETE)
+  ipcMain.removeHandler(REMINDER_IPC_CHANNELS.SNOOZE)
+  ipcMain.removeHandler(REMINDER_IPC_CHANNELS.SKIP)
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.GET, () => {
     return settingsService.get()
@@ -108,6 +133,25 @@ export function registerPahingaIpc(db: Database.Database): void {
 
   ipcMain.handle(SESSION_IPC_CHANNELS.SKIP, () => {
     focusSessionService.skip()
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(REMINDER_IPC_CHANNELS.COMPLETE, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    breakReminderActions.complete(id)
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(REMINDER_IPC_CHANNELS.SNOOZE, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    breakReminderActions.snooze(id)
+    breakReminderScheduler.recordSnooze()
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(REMINDER_IPC_CHANNELS.SKIP, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    breakReminderActions.skip(id)
     return dashboardService.getToday()
   })
 }

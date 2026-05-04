@@ -180,6 +180,23 @@ export function createFocusSessionService(
       finalizeCompleted(session)
     },
 
+    /**
+     * Active focus session only: effective work minutes and pause state for break reminder scheduling.
+     */
+    getBreakReminderTickContext(nowMs: number): {
+      sessionId: number
+      effectiveWorkMinutes: number
+      paused: boolean
+    } | null {
+      const session = syncLiveWithDb()
+      if (!session || !live) return null
+      return {
+        sessionId: session.id,
+        effectiveWorkMinutes: getEffectiveWorkMinutes(session, nowMs),
+        paused: live.paused
+      }
+    },
+
     getMetrics(
       session: FocusSession,
       nowMs: number,

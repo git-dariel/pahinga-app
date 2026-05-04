@@ -1,11 +1,18 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import {
+  BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
+  REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS
 } from '../shared/ipc'
-import type { DashboardToday, UserSettings, UserSettingsUpdate } from '../shared/types'
+import type {
+  BreakReminderTriggerPayload,
+  DashboardToday,
+  UserSettings,
+  UserSettingsUpdate
+} from '../shared/types'
 
 const pahinga = {
   getSettings(): Promise<UserSettings> {
@@ -37,6 +44,28 @@ const pahinga = {
   },
   sessionSkip(): Promise<DashboardToday> {
     return ipcRenderer.invoke(SESSION_IPC_CHANNELS.SKIP)
+  },
+
+  reminderComplete(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(REMINDER_IPC_CHANNELS.COMPLETE, reminderId)
+  },
+
+  reminderSnooze(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(REMINDER_IPC_CHANNELS.SNOOZE, reminderId)
+  },
+
+  reminderSkip(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(REMINDER_IPC_CHANNELS.SKIP, reminderId)
+  },
+
+  onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void {
+    const handler = (_event: Electron.IpcRendererEvent, payload: BreakReminderTriggerPayload): void => {
+      callback(payload)
+    }
+    ipcRenderer.on(BREAK_REMINDER_EVENT, handler)
+    return () => {
+      ipcRenderer.removeListener(BREAK_REMINDER_EVENT, handler)
+    }
   }
 }
 

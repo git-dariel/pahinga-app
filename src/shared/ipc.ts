@@ -25,4 +25,14 @@ export const SESSION_IPC_CHANNELS = {
   SKIP: 'session:skip'
 } as const
 
+/** Phase 5 break reminder — renderer invokes; main may also push `BREAK_REMINDER_EVENT`. */
+export const REMINDER_IPC_CHANNELS = {
+  COMPLETE: 'reminder:complete',
+  SNOOZE: 'reminder:snooze',
+  SKIP: 'reminder:skip'
+} as const
+
+/** Main process → renderer (preload: `api.pahinga.onBreakReminderTrigger`). */
+export const BREAK_REMINDER_EVENT = 'break-reminder:triggered' as const
+
 export type UserSettingsUpdatePayload = UserSettingsUpdate

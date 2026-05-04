@@ -26,14 +26,19 @@ export function createReminderRepository(db: Database.Database) {
     VALUES (@type, @triggered_at, COALESCE(@status, 'pending'))
   `)
 
-  const update = db.prepare(`
-    UPDATE reminders SET
-      completed_at = COALESCE(@completed_at, completed_at),
-      status = COALESCE(@status, status)
-    WHERE id = @id
+  const updateFull = db.prepare(`
+    UPDATE reminders SET completed_at = ?, status = ?
+    WHERE id = ?
   `)
 
   const getById = db.prepare(`SELECT * FROM reminders WHERE id = ?`)
+
+  const findPendingBreak = db.prepare(`
+    SELECT * FROM reminders
+    WHERE type = 'break' AND status = 'pending'
+    ORDER BY id DESC
+    LIMIT 1
+  `)
 
   const listTriggeredBetween = db.prepare(`
     SELECT * FROM reminders
@@ -62,11 +67,14 @@ export function createReminderRepository(db: Database.Database) {
 
     updateById(id: number, patch: ReminderUpdate): Reminder {
       try {
-        update.run({
-          id,
-          completed_at: patch.completedAt ?? null,
-          status: patch.status ?? null
-        })
+        const existing = getById.get(id) as ReminderRow | undefined
+        if (!existing) {
+          throw new Error('reminders not found')
+        }
+        const completed_at =
+          patch.completedAt !== undefined ? patch.completedAt : existing.completed_at
+        const status = patch.status !== undefined ? patch.status : existing.status
+        updateFull.run(completed_at, status, id)
         const row = getById.get(id) as ReminderRow | undefined
         if (!row) {
           throw new Error('reminders not found')
@@ -74,6 +82,15 @@ export function createReminderRepository(db: Database.Database) {
         return mapRow(row)
       } catch (cause) {
         throw wrapRepositoryError('reminders.updateById', cause)
+      }
+    },
+
+    findPendingBreakReminder(): Reminder | null {
+      try {
+        const row = findPendingBreak.get() as ReminderRow | undefined
+        return row ? mapRow(row) : null
+      } catch (cause) {
+        throw wrapRepositoryError('reminders.findPendingBreakReminder', cause)
       }
     },
 

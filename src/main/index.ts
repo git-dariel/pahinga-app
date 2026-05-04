@@ -5,6 +5,8 @@ import icon from '../../resources/icon.png?asset'
 import { getDatabase, closeDatabase } from './database/connection'
 import { registerPahingaIpc } from './ipc/registerPahingaIpc'
 
+let mainWindowRef: BrowserWindow | null = null
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -17,6 +19,11 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
+  })
+
+  mainWindowRef = mainWindow
+  mainWindow.on('closed', () => {
+    if (mainWindowRef === mainWindow) mainWindowRef = null
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -44,7 +51,7 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')
 
   const db = getDatabase()
-  registerPahingaIpc(db)
+  registerPahingaIpc(db, () => mainWindowRef)
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
