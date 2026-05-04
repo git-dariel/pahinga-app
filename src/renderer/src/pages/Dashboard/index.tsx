@@ -3,6 +3,7 @@ import { Coffee, Droplets, Timer, TrendingUp, Pause, Play, Square, Sparkles } fr
 import { useToast } from '@renderer/components/Toast/ToastProvider'
 import { formatClock } from '@renderer/lib/formatClock'
 import { useDashboard } from '@renderer/hooks/useDashboard'
+import { pahingaApi } from '@renderer/services/pahingaApi'
 
 function StatCard({
   icon: Icon,
@@ -66,6 +67,15 @@ export default function Dashboard(): React.ReactNode {
       showToast('Session stopped.', 'info')
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Could not stop session.', 'error')
+    }
+  }
+
+  async function onTestBreakOverlay(): Promise<void> {
+    try {
+      await pahingaApi.overlayOpenBreak('break_reminder')
+      showToast('Test break overlay opened.', 'success')
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not open break overlay test.', 'error')
     }
   }
 
@@ -176,6 +186,15 @@ export default function Dashboard(): React.ReactNode {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => void onTestBreakOverlay()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface border border-border text-foreground text-sm font-semibold hover:bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <Sparkles className="h-4 w-4" aria-hidden />
+              Test Break Overlay
+            </button>
+
             {idle ? (
               <button
                 type="button"

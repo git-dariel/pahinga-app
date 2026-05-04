@@ -1,19 +1,25 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, dialog, ipcMain, type OpenDialogOptions } from 'electron'
 import type Database from 'better-sqlite3'
 import {
   DASHBOARD_IPC_CHANNELS,
+  OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS
 } from '../../shared/ipc'
+import type { BreakOverlayTriggerPayload, BreakOverlayOpenReason } from '../../shared/types'
 import { createFocusSessionRepository } from '../repositories/focusSessionRepository'
 import { createReminderRepository } from '../repositories/reminderRepository'
 import { createStretchLogRepository } from '../repositories/stretchLogRepository'
 import { createBreakReminderActions } from '../services/breakReminderActions'
+import { createBreakOverlayService } from '../services/breakOverlayService'
 import { createBreakReminderScheduler } from '../services/breakReminderScheduler'
+import { BREAK_OVERLAY_MESSAGE, breakReminderModalFields } from '../services/breakReminderCopy'
+import { overlayMediaUrlFromPath } from '../services/overlayMediaUrl'
 import { createDashboardService } from '../services/dashboardService'
 import { createFocusSessionService } from '../services/focusSessionService'
 import { createSettingsService } from '../services/settingsService'
+import { nowIso } from '../database/timestamps'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -43,6 +49,13 @@ function sanitizeSessionStartPayload(payload: unknown): { plannedMinutes?: numbe
   return { plannedMinutes: v }
 }
 
+function sanitizeOverlayOpenReason(value: unknown): BreakOverlayOpenReason {
+  if (value === 'focus_complete' || value === 'break_reminder') {
+    return value
+  }
+  return 'focus_complete'
+}
+
 export function registerPahingaIpc(
   db: Database.Database,
   getMainWindow: () => BrowserWindow | null
@@ -54,11 +67,37 @@ export function registerPahingaIpc(
 
   const focusSessionService = createFocusSessionService(focusRepo, () => settingsService.get())
   const breakReminderActions = createBreakReminderActions(reminderRepo)
+  const breakOverlayService = createBreakOverlayService({ getMainWindow })
+
+  function openBreakOverlay(reason: BreakOverlayOpenReason): BreakOverlayTriggerPayload {
+    const settings = settingsService.get()
+    const fields = breakReminderModalFields(settings)
+    const reminder = reminderRepo.create({
+      type: 'break',
+      triggeredAt: nowIso(),
+      status: 'pending'
+    })
+    const payload: BreakOverlayTriggerPayload = {
+      reminderId: reminder.id,
+      reason,
+      durationMinutes: fields.durationMinutes,
+      message: BREAK_OVERLAY_MESSAGE,
+      instruction: fields.instruction,
+      suggestedType: fields.suggestedType,
+      mediaPath: overlayMediaUrlFromPath(settings.overlayMediaPath),
+      allowEmergencyExit: settings.allowEmergencyExit,
+      allowSnooze: settings.allowOverlaySnooze
+    }
+    breakOverlayService.open(payload)
+    return payload
+  }
+
   const breakReminderScheduler = createBreakReminderScheduler({
     reminderRepo,
     focusSessionService,
     settingsService,
-    getMainWindow
+    getMainWindow,
+    breakOverlayService
   })
   breakReminderScheduler.start()
 
@@ -67,7 +106,13 @@ export function registerPahingaIpc(
     focusRepo,
     reminderRepo,
     stretchRepo,
-    focusSessionService
+    focusSessionService,
+    () => {
+      const settings = settingsService.get()
+      if (settings.restLockModeEnabled && settings.overlayMode !== 'soft_reminder') {
+        openBreakOverlay('focus_complete')
+      }
+    }
   )
 
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.GET)
@@ -83,6 +128,14 @@ export function registerPahingaIpc(
   ipcMain.removeHandler(REMINDER_IPC_CHANNELS.COMPLETE)
   ipcMain.removeHandler(REMINDER_IPC_CHANNELS.SNOOZE)
   ipcMain.removeHandler(REMINDER_IPC_CHANNELS.SKIP)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.OPEN_BREAK)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.CLOSE_BREAK)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.START_BREAK)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.SNOOZE_BREAK)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.EMERGENCY_EXIT)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.COMPLETE_BREAK)
+  ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.GET_BREAK_PAYLOAD)
+  ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.PICK_OVERLAY_MEDIA)
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.GET, () => {
     return settingsService.get()
@@ -94,6 +147,21 @@ export function registerPahingaIpc(
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE, () => {
     return settingsService.isOnboardingComplete()
+  })
+
+  ipcMain.handle(SETTINGS_IPC_CHANNELS.PICK_OVERLAY_MEDIA, async () => {
+    const opts: OpenDialogOptions = {
+      title: 'Choose break overlay media',
+      properties: ['openFile'],
+      filters: [{ name: 'GIF or MP4', extensions: ['gif', 'mp4'] }]
+    }
+    const parent = getMainWindow()
+    const result =
+      parent && !parent.isDestroyed()
+        ? await dialog.showOpenDialog(parent, opts)
+        : await dialog.showOpenDialog(opts)
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
   })
 
   ipcMain.handle(DASHBOARD_IPC_CHANNELS.GET_TODAY, () => {
@@ -122,6 +190,10 @@ export function registerPahingaIpc(
       focusSessionService.cancel()
     } else {
       focusSessionService.complete()
+      const settings = settingsService.get()
+      if (settings.restLockModeEnabled && settings.overlayMode !== 'soft_reminder') {
+        openBreakOverlay('focus_complete')
+      }
     }
     return dashboardService.getToday()
   })
@@ -152,6 +224,51 @@ export function registerPahingaIpc(
   ipcMain.handle(REMINDER_IPC_CHANNELS.SKIP, (_event, raw: unknown) => {
     const id = sanitizeReminderId(raw)
     breakReminderActions.skip(id)
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.OPEN_BREAK, (_event, rawReason: unknown) => {
+    const reason = sanitizeOverlayOpenReason(rawReason)
+    return openBreakOverlay(reason)
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.CLOSE_BREAK, () => {
+    breakOverlayService.close()
+    return true
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.GET_BREAK_PAYLOAD, () => {
+    return breakOverlayService.getLastPayload()
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.START_BREAK, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    const r = reminderRepo.getById(id)
+    if (!r || r.type !== 'break' || r.status !== 'pending') {
+      throw new Error('Break reminder not found or already handled.')
+    }
+    return true
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.SNOOZE_BREAK, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    breakReminderActions.snooze(id)
+    breakReminderScheduler.recordSnooze()
+    breakOverlayService.close()
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.EMERGENCY_EXIT, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    breakReminderActions.emergencyExit(id)
+    breakOverlayService.close()
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.COMPLETE_BREAK, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    breakReminderActions.complete(id)
+    // Keep overlay open after completion so user can choose next action manually.
     return dashboardService.getToday()
   })
 }

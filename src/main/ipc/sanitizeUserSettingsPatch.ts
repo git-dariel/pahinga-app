@@ -5,7 +5,7 @@ import {
   FOCUS_DURATION_OPTIONS,
   WATER_REMINDER_OPTIONS
 } from '../../shared/reminderIntervals'
-import type { UserSettingsUpdate, WorkStyle } from '../../shared/types'
+import type { OverlayMode, UserSettingsUpdate, WorkStyle } from '../../shared/types'
 
 function isWorkStyle(value: string): value is WorkStyle {
   return (WORK_STYLES as readonly string[]).includes(value)
@@ -43,6 +43,19 @@ function isAllowedWaterInterval(value: unknown): value is number {
   )
 }
 
+function isOverlayMode(value: unknown): value is OverlayMode {
+  return (
+    value === 'soft_reminder' || value === 'focused_break_overlay' || value === 'strict_rest_lock'
+  )
+}
+
+function isValidOverlayMediaPath(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  if (value.length === 0 || value.length > 1024) return false
+  if (value.includes('\0')) return false
+  return /\.(gif|mp4)$/i.test(value)
+}
+
 export function sanitizeUserSettingsPatch(raw: Record<string, unknown>): UserSettingsUpdate {
   const patch: UserSettingsUpdate = {}
 
@@ -74,6 +87,25 @@ export function sanitizeUserSettingsPatch(raw: Record<string, unknown>): UserSet
   }
   if (typeof raw.startupEnabled === 'boolean') {
     patch.startupEnabled = raw.startupEnabled
+  }
+  if (typeof raw.restLockModeEnabled === 'boolean') {
+    patch.restLockModeEnabled = raw.restLockModeEnabled
+  }
+  if (isOverlayMode(raw.overlayMode)) {
+    patch.overlayMode = raw.overlayMode
+  }
+  if (typeof raw.overlayMediaPath === 'string') {
+    if (raw.overlayMediaPath.trim() === '') {
+      patch.overlayMediaPath = ''
+    } else if (isValidOverlayMediaPath(raw.overlayMediaPath)) {
+      patch.overlayMediaPath = raw.overlayMediaPath
+    }
+  }
+  if (typeof raw.allowEmergencyExit === 'boolean') {
+    patch.allowEmergencyExit = raw.allowEmergencyExit
+  }
+  if (typeof raw.allowOverlaySnooze === 'boolean') {
+    patch.allowOverlaySnooze = raw.allowOverlaySnooze
   }
   if (typeof raw.onboardingComplete === 'boolean') {
     patch.onboardingComplete = raw.onboardingComplete

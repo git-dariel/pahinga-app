@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { UserSettings, UserSettingsUpdate, WorkStyle } from '../../shared/types'
+import type { OverlayMode, UserSettings, UserSettingsUpdate, WorkStyle } from '../../shared/types'
 import { WORK_STYLES } from '../../shared/constants'
 import { wrapRepositoryError } from './errors'
 
@@ -14,6 +14,11 @@ type UserSettingsRow = {
   eye_rest_reminders_enabled: number
   notifications_enabled: number
   startup_enabled: number
+  rest_lock_mode_enabled: number
+  overlay_mode: string
+  overlay_media_path: string | null
+  allow_emergency_exit: number
+  allow_overlay_snooze: number
   onboarding_complete: number
   created_at: string
   updated_at: string
@@ -34,6 +39,17 @@ function normalizeWorkStyle(value: string): WorkStyle {
   return 'other'
 }
 
+function normalizeOverlayMode(value: string): OverlayMode {
+  if (
+    value === 'soft_reminder' ||
+    value === 'focused_break_overlay' ||
+    value === 'strict_rest_lock'
+  ) {
+    return value
+  }
+  return 'soft_reminder'
+}
+
 function mapRow(row: UserSettingsRow): UserSettings {
   return {
     id: row.id,
@@ -46,6 +62,11 @@ function mapRow(row: UserSettingsRow): UserSettings {
     eyeRestRemindersEnabled: intToBool(row.eye_rest_reminders_enabled),
     notificationsEnabled: intToBool(row.notifications_enabled),
     startupEnabled: intToBool(row.startup_enabled),
+    restLockModeEnabled: intToBool(row.rest_lock_mode_enabled),
+    overlayMode: normalizeOverlayMode(row.overlay_mode),
+    overlayMediaPath: row.overlay_media_path,
+    allowEmergencyExit: intToBool(row.allow_emergency_exit),
+    allowOverlaySnooze: intToBool(row.allow_overlay_snooze),
     onboardingComplete: intToBool(row.onboarding_complete),
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -72,6 +93,11 @@ export function createUserSettingsRepository(db: Database.Database) {
       eye_rest_reminders_enabled = COALESCE(@eye_rest_reminders_enabled, eye_rest_reminders_enabled),
       notifications_enabled = COALESCE(@notifications_enabled, notifications_enabled),
       startup_enabled = COALESCE(@startup_enabled, startup_enabled),
+      rest_lock_mode_enabled = COALESCE(@rest_lock_mode_enabled, rest_lock_mode_enabled),
+      overlay_mode = COALESCE(@overlay_mode, overlay_mode),
+      overlay_media_path = COALESCE(@overlay_media_path, overlay_media_path),
+      allow_emergency_exit = COALESCE(@allow_emergency_exit, allow_emergency_exit),
+      allow_overlay_snooze = COALESCE(@allow_overlay_snooze, allow_overlay_snooze),
       onboarding_complete = COALESCE(@onboarding_complete, onboarding_complete),
       updated_at = datetime('now')
     WHERE id = @id
@@ -127,6 +153,15 @@ export function createUserSettingsRepository(db: Database.Database) {
           notifications_enabled:
             patch.notificationsEnabled !== undefined ? boolToInt(patch.notificationsEnabled) : null,
           startup_enabled: patch.startupEnabled !== undefined ? boolToInt(patch.startupEnabled) : null,
+          rest_lock_mode_enabled:
+            patch.restLockModeEnabled !== undefined ? boolToInt(patch.restLockModeEnabled) : null,
+          overlay_mode: patch.overlayMode ?? null,
+          overlay_media_path:
+            patch.overlayMediaPath !== undefined ? patch.overlayMediaPath : null,
+          allow_emergency_exit:
+            patch.allowEmergencyExit !== undefined ? boolToInt(patch.allowEmergencyExit) : null,
+          allow_overlay_snooze:
+            patch.allowOverlaySnooze !== undefined ? boolToInt(patch.allowOverlaySnooze) : null,
           onboarding_complete:
             patch.onboardingComplete !== undefined ? boolToInt(patch.onboardingComplete) : null
         }

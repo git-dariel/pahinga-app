@@ -4,7 +4,9 @@ import type { UserSettingsUpdate } from './types'
 export const SETTINGS_IPC_CHANNELS = {
   GET: 'settings:get',
   UPDATE: 'settings:update',
-  IS_ONBOARDING_COMPLETE: 'settings:isOnboardingComplete'
+  IS_ONBOARDING_COMPLETE: 'settings:isOnboardingComplete',
+  /** Native file dialog for break overlay GIF/MP4 (Phase 6). */
+  PICK_OVERLAY_MEDIA: 'settings:pickOverlayMedia'
 } as const
 
 /** Phase 3 dashboard IPC. */
@@ -34,5 +36,20 @@ export const REMINDER_IPC_CHANNELS = {
 
 /** Main process → renderer (preload: `api.pahinga.onBreakReminderTrigger`). */
 export const BREAK_REMINDER_EVENT = 'break-reminder:triggered' as const
+
+/** Break overlay window + controls (Phase 6). */
+export const OVERLAY_IPC_CHANNELS = {
+  OPEN_BREAK: 'overlay:openBreak',
+  CLOSE_BREAK: 'overlay:closeBreak',
+  /** Pull last payload (fixes race if push happened before renderer subscribed). */
+  GET_BREAK_PAYLOAD: 'overlay:getBreakPayload',
+  START_BREAK: 'overlay:startBreak',
+  SNOOZE_BREAK: 'overlay:snoozeBreak',
+  EMERGENCY_EXIT: 'overlay:emergencyExit',
+  COMPLETE_BREAK: 'overlay:completeBreak'
+} as const
+
+/** Main process -> overlay renderer payload push. */
+export const BREAK_OVERLAY_EVENT = 'overlay:breakTriggered' as const
 
 export type UserSettingsUpdatePayload = UserSettingsUpdate

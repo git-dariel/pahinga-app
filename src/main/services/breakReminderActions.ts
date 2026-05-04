@@ -27,6 +27,14 @@ export function createBreakReminderActions(reminderRepo: ReminderRepository) {
       })
     },
 
+    emergencyExit(reminderId: number): void {
+      assertPendingBreak(reminderId)
+      reminderRepo.updateById(reminderId, {
+        status: 'emergency_exit',
+        completedAt: null
+      })
+    },
+
     snooze(reminderId: number): void {
       assertPendingBreak(reminderId)
       reminderRepo.updateById(reminderId, {

@@ -64,4 +64,15 @@ export function runMigrations(db: Database.Database): void {
     `)
     db.prepare('INSERT INTO schema_migrations (version) VALUES (?)').run(2)
   }
+
+  if (currentVersion < 3) {
+    db.exec(`
+      ALTER TABLE user_settings ADD COLUMN rest_lock_mode_enabled INTEGER DEFAULT 0;
+      ALTER TABLE user_settings ADD COLUMN overlay_mode TEXT DEFAULT 'soft_reminder';
+      ALTER TABLE user_settings ADD COLUMN overlay_media_path TEXT;
+      ALTER TABLE user_settings ADD COLUMN allow_emergency_exit INTEGER DEFAULT 1;
+      ALTER TABLE user_settings ADD COLUMN allow_overlay_snooze INTEGER DEFAULT 1;
+    `)
+    db.prepare('INSERT INTO schema_migrations (version) VALUES (?)').run(3)
+  }
 }

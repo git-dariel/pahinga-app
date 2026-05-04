@@ -7,11 +7,13 @@ import StretchGuide from './pages/StretchGuide'
 import DailySummary from './pages/DailySummary'
 import Settings from './pages/Settings'
 import Onboarding from './pages/Onboarding'
+import BreakOverlay from './pages/BreakOverlay'
 
 function App(): React.JSX.Element {
   return (
     <HashRouter>
       <Routes>
+        <Route path="/overlay-break" element={<BreakOverlay />} />
         <Route element={<OnboardingGate />}>
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/" element={<Layout />}>

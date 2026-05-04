@@ -1,14 +1,17 @@
 import { BrowserWindow, Notification } from 'electron'
 import { BREAK_REMINDER_EVENT } from '../../shared/ipc'
-import type { BreakReminderTriggerPayload } from '../../shared/types'
+import type { BreakOverlayTriggerPayload, BreakReminderTriggerPayload } from '../../shared/types'
 import { nowIso } from '../database/timestamps'
 import type { ReminderRepository } from '../repositories/reminderRepository'
 import type { SettingsService } from './settingsService'
 import type { FocusSessionService } from './focusSessionService'
 import {
+  BREAK_OVERLAY_MESSAGE,
   BREAK_REMINDER_NOTIFICATION_BODY,
   breakReminderModalFields
 } from './breakReminderCopy'
+import type { BreakOverlayService } from './breakOverlayService'
+import { overlayMediaUrlFromPath } from './overlayMediaUrl'
 
 const TICK_MS = 12_000
 const SNOOZE_MS = 5 * 60 * 1000
@@ -18,6 +21,7 @@ type Deps = {
   focusSessionService: FocusSessionService
   settingsService: SettingsService
   getMainWindow: () => BrowserWindow | null
+  breakOverlayService: BreakOverlayService
 }
 
 export function createBreakReminderScheduler(deps: Deps) {
@@ -95,7 +99,22 @@ export function createBreakReminderScheduler(deps: Deps) {
     lastBoundary = boundary
 
     showNotification()
-    sendToRenderer(payload)
+    if (settings.restLockModeEnabled && settings.overlayMode !== 'soft_reminder') {
+      const overlayPayload: BreakOverlayTriggerPayload = {
+        reminderId: reminder.id,
+        reason: 'break_reminder',
+        durationMinutes: fields.durationMinutes,
+        message: BREAK_OVERLAY_MESSAGE,
+        instruction: fields.instruction,
+        suggestedType: fields.suggestedType,
+        mediaPath: overlayMediaUrlFromPath(settings.overlayMediaPath),
+        allowEmergencyExit: settings.allowEmergencyExit,
+        allowSnooze: settings.allowOverlaySnooze
+      }
+      deps.breakOverlayService.open(overlayPayload)
+    } else {
+      sendToRenderer(payload)
+    }
   }
 
   return {

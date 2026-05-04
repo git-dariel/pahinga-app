@@ -1,6 +1,6 @@
 export type ReminderType = 'break' | 'water' | 'stretch' | 'eye_rest'
 
-export type ReminderStatus = 'pending' | 'completed' | 'snoozed' | 'skipped'
+export type ReminderStatus = 'pending' | 'completed' | 'snoozed' | 'skipped' | 'emergency_exit'
 
 export interface Reminder {
   id: number

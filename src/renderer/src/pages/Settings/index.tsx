@@ -5,14 +5,22 @@ import {
   FOCUS_DURATION_OPTIONS,
   WATER_REMINDER_OPTIONS
 } from '@shared/reminderIntervals'
+import type { OverlayMode } from '@shared/types/user-settings'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
 import { useUserSettings } from '@renderer/hooks/useUserSettings'
+import { pahingaApi } from '@renderer/services/pahingaApi'
 
 function optionsWithValue(fixed: readonly number[], value: number): number[] {
   const set = new Set<number>(fixed)
   set.add(value)
   return [...set].sort((a, b) => a - b)
 }
+
+const OVERLAY_MODES = [
+  { value: 'soft_reminder', label: 'Soft Reminder' },
+  { value: 'focused_break_overlay', label: 'Focused Break Overlay' },
+  { value: 'strict_rest_lock', label: 'Strict Rest Lock' }
+] as const
 
 function Toggle({
   pressed,
@@ -55,6 +63,11 @@ export default function Settings(): React.JSX.Element {
   const [stretchOn, setStretchOn] = useState(true)
   const [notificationsOn, setNotificationsOn] = useState(true)
   const [startupOn, setStartupOn] = useState(false)
+  const [restLockEnabled, setRestLockEnabled] = useState(false)
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>('soft_reminder')
+  const [overlayMediaPath, setOverlayMediaPath] = useState('')
+  const [allowEmergencyExit, setAllowEmergencyExit] = useState(true)
+  const [allowOverlaySnooze, setAllowOverlaySnooze] = useState(true)
 
   useEffect(() => {
     if (!data) return
@@ -65,6 +78,11 @@ export default function Settings(): React.JSX.Element {
     setStretchOn(data.stretchRemindersEnabled)
     setNotificationsOn(data.notificationsEnabled)
     setStartupOn(data.startupEnabled)
+    setRestLockEnabled(data.restLockModeEnabled)
+    setOverlayMode(data.overlayMode)
+    setOverlayMediaPath(data.overlayMediaPath ?? '')
+    setAllowEmergencyExit(data.allowEmergencyExit)
+    setAllowOverlaySnooze(data.allowOverlaySnooze)
   }, [data])
 
   const isLoading = status === 'loading' && !data
@@ -79,7 +97,12 @@ export default function Settings(): React.JSX.Element {
       waterMinutes !== data.waterInterval ||
       stretchOn !== data.stretchRemindersEnabled ||
       notificationsOn !== data.notificationsEnabled ||
-      startupOn !== data.startupEnabled
+      startupOn !== data.startupEnabled ||
+      restLockEnabled !== data.restLockModeEnabled ||
+      overlayMode !== data.overlayMode ||
+      overlayMediaPath !== (data.overlayMediaPath ?? '') ||
+      allowEmergencyExit !== data.allowEmergencyExit ||
+      allowOverlaySnooze !== data.allowOverlaySnooze
     )
   }, [
     data,
@@ -89,7 +112,12 @@ export default function Settings(): React.JSX.Element {
     waterMinutes,
     stretchOn,
     notificationsOn,
-    startupOn
+    startupOn,
+    restLockEnabled,
+    overlayMode,
+    overlayMediaPath,
+    allowEmergencyExit,
+    allowOverlaySnooze
   ])
 
   async function handleSave(): Promise<void> {
@@ -102,7 +130,12 @@ export default function Settings(): React.JSX.Element {
         waterInterval: waterMinutes,
         stretchRemindersEnabled: stretchOn,
         notificationsEnabled: notificationsOn,
-        startupEnabled: startupOn
+        startupEnabled: startupOn,
+        restLockModeEnabled: restLockEnabled,
+        overlayMode,
+        overlayMediaPath: overlayMediaPath.trim(),
+        allowEmergencyExit,
+        allowOverlaySnooze
       })
       showToast('Settings saved successfully.', 'success')
     } catch {
@@ -272,6 +305,106 @@ export default function Settings(): React.JSX.Element {
               <p className="text-xs text-muted">Launch Pahinga when you log in</p>
             </div>
             <Toggle pressed={startupOn} onPressedChange={setStartupOn} label="Start on system startup" />
+          </div>
+        </div>
+
+        <div className="px-6 py-5">
+          <p className="text-sm font-semibold text-foreground mb-4">Break Overlay / Rest Lock</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Enable Rest Lock Mode</p>
+                <p className="text-xs text-muted">Show an always-on-top break overlay instead of only small reminders</p>
+              </div>
+              <Toggle
+                pressed={restLockEnabled}
+                onPressedChange={setRestLockEnabled}
+                label="Enable rest lock mode"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Overlay Mode</p>
+                <p className="text-xs text-muted">Focused Break Overlay is recommended for MVP</p>
+              </div>
+              <select
+                className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-44"
+                value={overlayMode}
+                onChange={(e) => setOverlayMode(e.target.value as OverlayMode)}
+              >
+                {OVERLAY_MODES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Overlay media (GIF or MP4)</p>
+                <p className="text-xs text-muted">
+                  Choose a file from your computer, or paste a path. Leave empty for the default illustration.
+                </p>
+                <input
+                  type="text"
+                  value={overlayMediaPath}
+                  onChange={(e) => setOverlayMediaPath(e.target.value)}
+                  placeholder="No file selected"
+                  className="mt-2 w-full max-w-md text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background"
+                />
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void (async () => {
+                      try {
+                        const picked = await pahingaApi.pickOverlayMedia()
+                        if (picked) setOverlayMediaPath(picked)
+                      } catch {
+                        showToast('Could not open file picker.', 'error')
+                      }
+                    })()
+                  }
+                  className="px-3 py-1.5 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-background"
+                >
+                  Choose file…
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOverlayMediaPath('')}
+                  className="px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-muted hover:text-foreground hover:bg-background"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Allow Snooze in Overlay</p>
+                <p className="text-xs text-muted">Lets users snooze 5 minutes from the overlay screen</p>
+              </div>
+              <Toggle
+                pressed={allowOverlaySnooze}
+                onPressedChange={setAllowOverlaySnooze}
+                label="Allow overlay snooze"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Allow Emergency Exit</p>
+                <p className="text-xs text-muted">Keeps a safe way out available to avoid trapping users</p>
+              </div>
+              <Toggle
+                pressed={allowEmergencyExit}
+                onPressedChange={setAllowEmergencyExit}
+                label="Allow emergency exit"
+              />
+            </div>
           </div>
         </div>
       </div>

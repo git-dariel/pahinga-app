@@ -1,13 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import {
+  BREAK_OVERLAY_EVENT,
   BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
+  OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS
 } from '../shared/ipc'
 import type {
+  BreakOverlayOpenReason,
+  BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
   UserSettings,
@@ -20,6 +24,10 @@ const pahinga = {
   },
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.UPDATE, patch)
+  },
+
+  pickOverlayMedia(): Promise<string | null> {
+    return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.PICK_OVERLAY_MEDIA)
   },
   isOnboardingComplete(): Promise<boolean> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE)
@@ -66,6 +74,44 @@ const pahinga = {
     return () => {
       ipcRenderer.removeListener(BREAK_REMINDER_EVENT, handler)
     }
+  },
+
+  overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.OPEN_BREAK, reason)
+  },
+
+  overlayCloseBreak(): Promise<boolean> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.CLOSE_BREAK)
+  },
+
+  overlayStartBreak(reminderId: number): Promise<boolean> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.START_BREAK, reminderId)
+  },
+
+  overlaySnoozeBreak(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.SNOOZE_BREAK, reminderId)
+  },
+
+  overlayEmergencyExit(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.EMERGENCY_EXIT, reminderId)
+  },
+
+  overlayCompleteBreak(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.COMPLETE_BREAK, reminderId)
+  },
+
+  onOverlayBreakTriggered(callback: (payload: BreakOverlayTriggerPayload) => void): () => void {
+    const handler = (_event: Electron.IpcRendererEvent, payload: BreakOverlayTriggerPayload): void => {
+      callback(payload)
+    }
+    ipcRenderer.on(BREAK_OVERLAY_EVENT, handler)
+    return () => {
+      ipcRenderer.removeListener(BREAK_OVERLAY_EVENT, handler)
+    }
+  },
+
+  getBreakOverlayPayload(): Promise<BreakOverlayTriggerPayload | null> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.GET_BREAK_PAYLOAD)
   }
 }
 

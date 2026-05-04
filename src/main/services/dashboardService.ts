@@ -12,14 +12,17 @@ export function createDashboardService(
   focusRepo: FocusSessionRepository,
   reminderRepo: ReminderRepository,
   stretchRepo: StretchLogRepository,
-  focusSessionService: FocusSessionService
+  focusSessionService: FocusSessionService,
+  onFocusTimerCompleted?: () => void
 ) {
   return {
     getToday(): DashboardToday {
       const { startIso, endExclusiveIso, dateLabel } = getLocalDayBounds()
       const settings = settingsService.get()
 
-      focusSessionService.completeDueToTimer()
+      if (focusSessionService.completeDueToTimer()) {
+        onFocusTimerCompleted?.()
+      }
 
       const completedToday = focusRepo.listCompletedEndedBetween(startIso, endExclusiveIso)
       const totalFocusMinutes = completedToday.reduce((sum, row) => sum + (row.durationMinutes ?? 0), 0)

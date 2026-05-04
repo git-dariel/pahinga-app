@@ -172,12 +172,13 @@ export function createFocusSessionService(
     },
 
     /** Completes the session when the focus timer reaches zero (still focusing). */
-    completeDueToTimer(): void {
+    completeDueToTimer(): boolean {
       const session = syncLiveWithDb()
-      if (!session || !live || live.paused) return
+      if (!session || !live || live.paused) return false
       const nowMs = Date.now()
-      if (getFocusRemainingSeconds(session, nowMs) > 0) return
+      if (getFocusRemainingSeconds(session, nowMs) > 0) return false
       finalizeCompleted(session)
+      return true
     },
 
     /**

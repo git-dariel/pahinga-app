@@ -1,5 +1,7 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
+  BreakOverlayOpenReason,
+  BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
   UserSettings,
@@ -9,6 +11,7 @@ import type {
 export interface PahingaPreloadApi {
   getSettings(): Promise<UserSettings>
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings>
+  pickOverlayMedia(): Promise<string | null>
   isOnboardingComplete(): Promise<boolean>
   getDashboardToday(): Promise<DashboardToday>
   sessionStart(payload?: { plannedMinutes?: number }): Promise<DashboardToday>
@@ -21,6 +24,14 @@ export interface PahingaPreloadApi {
   reminderSnooze(reminderId: number): Promise<DashboardToday>
   reminderSkip(reminderId: number): Promise<DashboardToday>
   onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void
+  overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload>
+  overlayCloseBreak(): Promise<boolean>
+  overlayStartBreak(reminderId: number): Promise<boolean>
+  overlaySnoozeBreak(reminderId: number): Promise<DashboardToday>
+  overlayEmergencyExit(reminderId: number): Promise<DashboardToday>
+  overlayCompleteBreak(reminderId: number): Promise<DashboardToday>
+  onOverlayBreakTriggered(callback: (payload: BreakOverlayTriggerPayload) => void): () => void
+  getBreakOverlayPayload(): Promise<BreakOverlayTriggerPayload | null>
 }
 
 export interface AppPreloadApi {

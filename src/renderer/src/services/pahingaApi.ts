@@ -1,4 +1,6 @@
 import type {
+  BreakOverlayOpenReason,
+  BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
   UserSettings,
@@ -19,6 +21,10 @@ export const pahingaApi = {
 
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return getPahinga().updateSettings(patch)
+  },
+
+  pickOverlayMedia(): Promise<string | null> {
+    return getPahinga().pickOverlayMedia()
   },
 
   isOnboardingComplete(): Promise<boolean> {
@@ -80,5 +86,37 @@ export const pahingaApi = {
 
   onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void {
     return getPahinga().onBreakReminderTrigger(callback)
+  },
+
+  overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload> {
+    return getPahinga().overlayOpenBreak(reason)
+  },
+
+  overlayCloseBreak(): Promise<boolean> {
+    return getPahinga().overlayCloseBreak()
+  },
+
+  overlayStartBreak(reminderId: number): Promise<boolean> {
+    return getPahinga().overlayStartBreak(reminderId)
+  },
+
+  overlaySnoozeBreak(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().overlaySnoozeBreak(reminderId)
+  },
+
+  overlayEmergencyExit(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().overlayEmergencyExit(reminderId)
+  },
+
+  overlayCompleteBreak(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().overlayCompleteBreak(reminderId)
+  },
+
+  onOverlayBreakTriggered(callback: (payload: BreakOverlayTriggerPayload) => void): () => void {
+    return getPahinga().onOverlayBreakTriggered(callback)
+  },
+
+  getBreakOverlayPayload(): Promise<BreakOverlayTriggerPayload | null> {
+    return getPahinga().getBreakOverlayPayload()
   }
 }

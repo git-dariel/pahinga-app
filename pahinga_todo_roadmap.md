@@ -220,49 +220,49 @@ The backend/main process should handle local database operations, reminder logic
 
 ## Frontend TODO
 
-- [ ] Create Break Overlay screen.
-- [ ] Create always-on-top overlay layout design.
-- [ ] Add large break timer countdown.
-- [ ] Add cute default GIF, video, or illustration area.
-- [ ] Add support for selecting default media.
-- [ ] Add support for previewing custom GIF.
-- [ ] Add support for previewing custom video.
-- [ ] Add Start Break button.
-- [ ] Add Snooze 5 min button.
-- [ ] Add Emergency Exit button.
-- [ ] Add Break Complete state.
-- [ ] Add Continue Working button after break completion.
-- [ ] Add Open Stretch Guide button after break completion.
-- [ ] Add overlay mode setting in Settings page.
-- [ ] Add enable or disable Rest Lock Mode toggle.
-- [ ] Add friendly break messages.
-- [ ] Add low-resource fallback using static illustration.
-- [ ] Ensure overlay works on small laptop screens.
-- [ ] Ensure overlay text is readable and not visually painful.
+- [x] Create Break Overlay screen.
+- [x] Create always-on-top overlay layout design.
+- [x] Add large break timer countdown.
+- [x] Add cute default GIF, video, or illustration area.
+- [x] Add support for selecting default media.
+- [x] Add support for previewing custom GIF.
+- [x] Add support for previewing custom video.
+- [x] Add Start Break button.
+- [x] Add Snooze 5 min button.
+- [x] Add Emergency Exit button.
+- [x] Add Break Complete state.
+- [x] Add Continue Working button after break completion.
+- [x] Add Open Stretch Guide button after break completion.
+- [x] Add overlay mode setting in Settings page.
+- [x] Add enable or disable Rest Lock Mode toggle.
+- [x] Add friendly break messages.
+- [x] Add low-resource fallback using static illustration.
+- [x] Ensure overlay works on small laptop screens.
+- [x] Ensure overlay text is readable and not visually painful.
 
 ## Backend TODO
 
-- [ ] Create break overlay service.
-- [ ] Create separate Electron overlay window.
-- [ ] Configure overlay as always-on-top.
-- [ ] Configure overlay as frameless.
-- [ ] Configure overlay to open when focus session ends.
-- [ ] Configure overlay to open when break reminder is triggered.
-- [ ] Add IPC event: `overlay:openBreak`.
-- [ ] Add IPC event: `overlay:closeBreak`.
-- [ ] Add IPC handler: `overlay:startBreak`.
-- [ ] Add IPC handler: `overlay:snoozeBreak`.
-- [ ] Add IPC handler: `overlay:emergencyExit`.
-- [ ] Add IPC handler: `overlay:completeBreak`.
-- [ ] Store overlay mode in settings.
-- [ ] Store selected overlay media path in settings.
-- [ ] Validate uploaded media file type.
-- [ ] Support local GIF file path.
-- [ ] Support local video file path.
-- [ ] Add safe fallback if media file is missing.
-- [ ] Log break status as completed, snoozed, skipped, or emergency_exit.
-- [ ] Make sure overlay can appear while main app is minimized.
-- [ ] Prevent multiple overlay windows from opening at the same time.
+- [x] Create break overlay service.
+- [x] Create separate Electron overlay window.
+- [x] Configure overlay as always-on-top.
+- [x] Configure overlay as frameless.
+- [x] Configure overlay to open when focus session ends.
+- [x] Configure overlay to open when break reminder is triggered.
+- [x] Add IPC event: `overlay:openBreak`.
+- [x] Add IPC event: `overlay:closeBreak`.
+- [x] Add IPC handler: `overlay:startBreak`.
+- [x] Add IPC handler: `overlay:snoozeBreak`.
+- [x] Add IPC handler: `overlay:emergencyExit`.
+- [x] Add IPC handler: `overlay:completeBreak`.
+- [x] Store overlay mode in settings.
+- [x] Store selected overlay media path in settings.
+- [x] Validate uploaded media file type.
+- [x] Support local GIF file path.
+- [x] Support local video file path.
+- [x] Add safe fallback if media file is missing.
+- [x] Log break status as completed, snoozed, skipped, or emergency_exit.
+- [x] Make sure overlay can appear while main app is minimized.
+- [x] Prevent multiple overlay windows from opening at the same time.
 - [ ] Add emergency exit reason logging as optional future improvement.
 
 ## Important UX Rule

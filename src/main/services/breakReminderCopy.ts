@@ -16,3 +16,6 @@ export function breakReminderModalFields(settings: UserSettings): {
 /** Desktop notification body — exact copy from product guide §4. */
 export const BREAK_REMINDER_NOTIFICATION_BODY =
   'Time for a short break. Stand up, stretch, and rest your eyes.'
+
+export const BREAK_OVERLAY_MESSAGE = 'Time to rest. Your eyes and shoulders need a short break.'
+export const BREAK_OVERLAY_COMPLETE_MESSAGE = 'Break complete. Nice work taking care of yourself.'
