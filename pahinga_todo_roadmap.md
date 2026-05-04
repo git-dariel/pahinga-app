@@ -125,29 +125,29 @@ The backend/main process should handle local database operations, reminder logic
 
 ## Frontend TODO
 
-- [ ] Create Dashboard page layout.
-- [ ] Add focus timer card.
-- [ ] Add next break reminder card.
-- [ ] Add next water reminder card.
-- [ ] Add today work time card.
-- [ ] Add breaks taken card.
-- [ ] Add quick action buttons.
-- [ ] Display current active session state.
-- [ ] Display next reminder countdown.
-- [ ] Add empty state for first-time users.
-- [ ] Add refresh logic after session or reminder updates.
+- [x] Create Dashboard page layout.
+- [x] Add focus timer card.
+- [x] Add next break reminder card.
+- [x] Add next water reminder card.
+- [x] Add today work time card.
+- [x] Add breaks taken card.
+- [x] Add quick action buttons.
+- [x] Display current active session state.
+- [x] Display next reminder countdown.
+- [x] Add empty state for first-time users.
+- [x] Add refresh logic after session or reminder updates.
 
 ## Backend TODO
 
-- [ ] Create dashboard service.
-- [ ] Create daily summary calculation method.
-- [ ] Create IPC handler: `dashboard:getToday`.
-- [ ] Calculate total focus time for today.
-- [ ] Calculate total breaks taken today.
-- [ ] Calculate skipped reminders today.
-- [ ] Calculate completed water reminders today.
-- [ ] Return current settings with dashboard data.
-- [ ] Add date filtering helper for today.
+- [x] Create dashboard service.
+- [x] Create daily summary calculation method.
+- [x] Create IPC handler: `dashboard:getToday`.
+- [x] Calculate total focus time for today.
+- [x] Calculate total breaks taken today.
+- [x] Calculate skipped reminders today.
+- [x] Calculate completed water reminders today.
+- [x] Return current settings with dashboard data.
+- [x] Add date filtering helper for today.
 
 ---
 

@@ -48,6 +48,22 @@ export function createFocusSessionRepository(db: Database.Database) {
     ORDER BY started_at ASC
   `)
 
+  const findActive = db.prepare(`
+    SELECT * FROM focus_sessions
+    WHERE status = 'in_progress'
+    ORDER BY id DESC
+    LIMIT 1
+  `)
+
+  const listCompletedEndedBetween = db.prepare(`
+    SELECT * FROM focus_sessions
+    WHERE status = 'completed'
+      AND ended_at IS NOT NULL
+      AND ended_at >= @start
+      AND ended_at < @end
+    ORDER BY ended_at ASC
+  `)
+
   return {
     create(input: FocusSessionInsert): FocusSession {
       try {
@@ -99,6 +115,24 @@ export function createFocusSessionRepository(db: Database.Database) {
         return rows.map(mapRow)
       } catch (cause) {
         throw wrapRepositoryError('focus_sessions.listStartedBetween', cause)
+      }
+    },
+
+    findActive(): FocusSession | null {
+      try {
+        const row = findActive.get() as FocusSessionRow | undefined
+        return row ? mapRow(row) : null
+      } catch (cause) {
+        throw wrapRepositoryError('focus_sessions.findActive', cause)
+      }
+    },
+
+    listCompletedEndedBetween(startIso: string, endIso: string): FocusSession[] {
+      try {
+        const rows = listCompletedEndedBetween.all({ start: startIso, end: endIso }) as FocusSessionRow[]
+        return rows.map(mapRow)
+      } catch (cause) {
+        throw wrapRepositoryError('focus_sessions.listCompletedEndedBetween', cause)
       }
     }
   }

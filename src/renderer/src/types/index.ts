@@ -1,4 +1,6 @@
 export type {
+  DashboardSessionPhase,
+  DashboardToday,
   DailySummary,
   FocusSession,
   FocusSessionInsert,

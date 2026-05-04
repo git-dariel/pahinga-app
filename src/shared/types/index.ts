@@ -8,3 +8,4 @@ export type {
 export type { Reminder, ReminderType, ReminderStatus, ReminderInsert, ReminderUpdate } from './reminder'
 export type { StretchLog, StretchType, StretchLogInsert } from './stretch-log'
 export type { DailySummary } from './daily-summary'
+export type { DashboardToday, DashboardSessionPhase } from './dashboard-today'
