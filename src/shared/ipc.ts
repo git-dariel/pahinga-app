@@ -37,6 +37,16 @@ export const REMINDER_IPC_CHANNELS = {
 /** Main process → renderer (preload: `api.pahinga.onBreakReminderTrigger`). */
 export const BREAK_REMINDER_EVENT = 'break-reminder:triggered' as const
 
+/** Phase 7 water reminder — renderer invokes; main also pushes `WATER_REMINDER_EVENT`. */
+export const WATER_REMINDER_IPC_CHANNELS = {
+  COMPLETE: 'water-reminder:complete',
+  SNOOZE: 'water-reminder:snooze',
+  SKIP: 'water-reminder:skip'
+} as const
+
+/** Main process → renderer (preload: `api.pahinga.onWaterReminderTrigger`). */
+export const WATER_REMINDER_EVENT = 'water-reminder:triggered' as const
+
 /** Break overlay window + controls (Phase 6). */
 export const OVERLAY_IPC_CHANNELS = {
   OPEN_BREAK: 'overlay:openBreak',
@@ -52,5 +62,11 @@ export const OVERLAY_IPC_CHANNELS = {
 
 /** Main process -> overlay renderer payload push. */
 export const BREAK_OVERLAY_EVENT = 'overlay:breakTriggered' as const
+
+/** Phase 8 stretch guide — renderer invokes to save and fetch stretch logs. */
+export const STRETCH_IPC_CHANNELS = {
+  COMPLETE: 'stretch:complete',
+  GET_TODAY: 'stretch:getToday'
+} as const
 
 export type UserSettingsUpdatePayload = UserSettingsUpdate

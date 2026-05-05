@@ -4,8 +4,11 @@ import type {
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
+  StretchLog,
+  StretchType,
   UserSettings,
-  UserSettingsUpdate
+  UserSettingsUpdate,
+  WaterReminderTriggerPayload
 } from '../shared/types'
 
 export interface PahingaPreloadApi {
@@ -24,6 +27,12 @@ export interface PahingaPreloadApi {
   reminderSnooze(reminderId: number): Promise<DashboardToday>
   reminderSkip(reminderId: number): Promise<DashboardToday>
   onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void
+  waterReminderComplete(reminderId: number): Promise<DashboardToday>
+  waterReminderSnooze(reminderId: number): Promise<DashboardToday>
+  waterReminderSkip(reminderId: number): Promise<DashboardToday>
+  onWaterReminderTrigger(callback: (payload: WaterReminderTriggerPayload) => void): () => void
+  stretchComplete(stretchType: StretchType, durationSeconds: number): Promise<StretchLog>
+  stretchGetToday(): Promise<StretchLog[]>
   overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload>
   overlayCloseBreak(): Promise<boolean>
   overlayStartBreak(reminderId: number): Promise<boolean>

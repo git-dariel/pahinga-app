@@ -40,6 +40,13 @@ export function createReminderRepository(db: Database.Database) {
     LIMIT 1
   `)
 
+  const findPendingWater = db.prepare(`
+    SELECT * FROM reminders
+    WHERE type = 'water' AND status = 'pending'
+    ORDER BY id DESC
+    LIMIT 1
+  `)
+
   const listTriggeredBetween = db.prepare(`
     SELECT * FROM reminders
     WHERE triggered_at >= @start AND triggered_at < @end
@@ -91,6 +98,15 @@ export function createReminderRepository(db: Database.Database) {
         return row ? mapRow(row) : null
       } catch (cause) {
         throw wrapRepositoryError('reminders.findPendingBreakReminder', cause)
+      }
+    },
+
+    findPendingWaterReminder(): Reminder | null {
+      try {
+        const row = findPendingWater.get() as ReminderRow | undefined
+        return row ? mapRow(row) : null
+      } catch (cause) {
+        throw wrapRepositoryError('reminders.findPendingWaterReminder', cause)
       }
     },
 

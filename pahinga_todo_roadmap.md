@@ -279,22 +279,22 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Create Water Reminder modal or toast.
-- [ ] Add Done button.
-- [ ] Add Remind Me Later button.
-- [ ] Update water reminder count after completion.
-- [ ] Display next water reminder countdown on Dashboard.
-- [ ] Add water reminder setting in Settings page.
+- [x] Create Water Reminder modal or toast.
+- [x] Add Done button.
+- [x] Add Remind Me Later button.
+- [x] Update water reminder count after completion.
+- [x] Display next water reminder countdown on Dashboard.
+- [x] Add water reminder setting in Settings page.
 
 ## Backend TODO
 
-- [ ] Add water reminder scheduler.
-- [ ] Create IPC event for water reminder trigger.
-- [ ] Store reminder type as `water`.
-- [ ] Store water reminder status.
-- [ ] Add remind-me-later logic.
-- [ ] Trigger desktop notification for water reminder.
-- [ ] Include completed water reminders in daily summary.
+- [x] Add water reminder scheduler.
+- [x] Create IPC event for water reminder trigger.
+- [x] Store reminder type as `water`.
+- [x] Store water reminder status.
+- [x] Add remind-me-later logic.
+- [x] Trigger desktop notification for water reminder.
+- [x] Include completed water reminders in daily summary.
 
 ---
 
@@ -302,32 +302,32 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Create Stretch Guide page.
-- [ ] Create stretch category cards:
-  - [ ] Neck
-  - [ ] Shoulder
-  - [ ] Wrist
-  - [ ] Eyes
-- [ ] Create stretch details view.
-- [ ] Add stretch instruction text.
-- [ ] Add stretch timer.
-- [ ] Add Start Stretch button.
-- [ ] Add Complete Stretch button.
-- [ ] Add completion message.
-- [ ] Save completed stretch log through IPC.
-- [ ] Display completed stretch count in Daily Summary.
+- [x] Create Stretch Guide page.
+- [x] Create stretch category cards:
+  - [x] Neck
+  - [x] Shoulder
+  - [x] Wrist
+  - [x] Eyes
+- [x] Create stretch details view.
+- [x] Add stretch instruction text.
+- [x] Add stretch timer.
+- [x] Add Start Stretch button.
+- [x] Add Complete Stretch button.
+- [x] Add completion message.
+- [x] Save completed stretch log through IPC.
+- [x] Display completed stretch count in Daily Summary.
 
 ## Backend TODO
 
-- [ ] Create stretch service.
-- [ ] Create method to save completed stretch.
-- [ ] Create method to fetch stretch logs for today.
-- [ ] Create IPC handler: `stretch:complete`.
-- [ ] Create IPC handler: `stretch:getToday`.
-- [ ] Store stretch type.
-- [ ] Store stretch duration.
-- [ ] Store completion timestamp.
-- [ ] Include stretch count in daily summary.
+- [x] Create stretch service.
+- [x] Create method to save completed stretch.
+- [x] Create method to fetch stretch logs for today.
+- [x] Create IPC handler: `stretch:complete`.
+- [x] Create IPC handler: `stretch:getToday`.
+- [x] Store stretch type.
+- [x] Store stretch duration.
+- [x] Store completion timestamp.
+- [x] Include stretch count in daily summary.
 
 ---
 

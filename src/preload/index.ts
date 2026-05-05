@@ -7,15 +7,21 @@ import {
   OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
-  SETTINGS_IPC_CHANNELS
+  SETTINGS_IPC_CHANNELS,
+  STRETCH_IPC_CHANNELS,
+  WATER_REMINDER_EVENT,
+  WATER_REMINDER_IPC_CHANNELS
 } from '../shared/ipc'
 import type {
   BreakOverlayOpenReason,
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
+  StretchLog,
+  StretchType,
   UserSettings,
-  UserSettingsUpdate
+  UserSettingsUpdate,
+  WaterReminderTriggerPayload
 } from '../shared/types'
 
 const pahinga = {
@@ -74,6 +80,36 @@ const pahinga = {
     return () => {
       ipcRenderer.removeListener(BREAK_REMINDER_EVENT, handler)
     }
+  },
+
+  waterReminderComplete(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(WATER_REMINDER_IPC_CHANNELS.COMPLETE, reminderId)
+  },
+
+  waterReminderSnooze(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(WATER_REMINDER_IPC_CHANNELS.SNOOZE, reminderId)
+  },
+
+  waterReminderSkip(reminderId: number): Promise<DashboardToday> {
+    return ipcRenderer.invoke(WATER_REMINDER_IPC_CHANNELS.SKIP, reminderId)
+  },
+
+  onWaterReminderTrigger(callback: (payload: WaterReminderTriggerPayload) => void): () => void {
+    const handler = (_event: Electron.IpcRendererEvent, payload: WaterReminderTriggerPayload): void => {
+      callback(payload)
+    }
+    ipcRenderer.on(WATER_REMINDER_EVENT, handler)
+    return () => {
+      ipcRenderer.removeListener(WATER_REMINDER_EVENT, handler)
+    }
+  },
+
+  stretchComplete(stretchType: StretchType, durationSeconds: number): Promise<StretchLog> {
+    return ipcRenderer.invoke(STRETCH_IPC_CHANNELS.COMPLETE, { stretchType, durationSeconds })
+  },
+
+  stretchGetToday(): Promise<StretchLog[]> {
+    return ipcRenderer.invoke(STRETCH_IPC_CHANNELS.GET_TODAY)
   },
 
   overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload> {

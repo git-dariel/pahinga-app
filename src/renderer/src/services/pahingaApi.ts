@@ -3,8 +3,11 @@ import type {
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
+  StretchLog,
+  StretchType,
   UserSettings,
-  UserSettingsUpdate
+  UserSettingsUpdate,
+  WaterReminderTriggerPayload
 } from '@shared/types'
 
 function getPahinga(): Window['api']['pahinga'] {
@@ -86,6 +89,30 @@ export const pahingaApi = {
 
   onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void {
     return getPahinga().onBreakReminderTrigger(callback)
+  },
+
+  waterReminderComplete(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().waterReminderComplete(reminderId)
+  },
+
+  waterReminderSnooze(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().waterReminderSnooze(reminderId)
+  },
+
+  waterReminderSkip(reminderId: number): Promise<DashboardToday> {
+    return getPahinga().waterReminderSkip(reminderId)
+  },
+
+  onWaterReminderTrigger(callback: (payload: WaterReminderTriggerPayload) => void): () => void {
+    return getPahinga().onWaterReminderTrigger(callback)
+  },
+
+  stretchComplete(stretchType: StretchType, durationSeconds: number): Promise<StretchLog> {
+    return getPahinga().stretchComplete(stretchType, durationSeconds)
+  },
+
+  stretchGetToday(): Promise<StretchLog[]> {
+    return getPahinga().stretchGetToday()
   },
 
   overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload> {

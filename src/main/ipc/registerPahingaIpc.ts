@@ -6,12 +6,15 @@ import {
   OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
-  SETTINGS_IPC_CHANNELS
+  SETTINGS_IPC_CHANNELS,
+  STRETCH_IPC_CHANNELS,
+  WATER_REMINDER_IPC_CHANNELS
 } from '../../shared/ipc'
 import type {
   BreakOverlayTriggerPayload,
   BreakOverlayOpenReason,
-  BreakReminderTriggerPayload
+  BreakReminderTriggerPayload,
+  StretchType
 } from '../../shared/types'
 import { createFocusSessionRepository } from '../repositories/focusSessionRepository'
 import { createReminderRepository } from '../repositories/reminderRepository'
@@ -19,6 +22,9 @@ import { createStretchLogRepository } from '../repositories/stretchLogRepository
 import { createBreakReminderActions } from '../services/breakReminderActions'
 import { createBreakOverlayService } from '../services/breakOverlayService'
 import { createBreakReminderScheduler } from '../services/breakReminderScheduler'
+import { createWaterReminderActions } from '../services/waterReminderActions'
+import { createWaterReminderScheduler } from '../services/waterReminderScheduler'
+import { createStretchService } from '../services/stretchService'
 import {
   BREAK_OVERLAY_MESSAGE,
   BREAK_REMINDER_NOTIFICATION_BODY,
@@ -76,6 +82,8 @@ export function registerPahingaIpc(
 
   const focusSessionService = createFocusSessionService(focusRepo, () => settingsService.get())
   const breakReminderActions = createBreakReminderActions(reminderRepo)
+  const waterReminderActions = createWaterReminderActions(reminderRepo)
+  const stretchService = createStretchService(stretchRepo)
   const breakOverlayService = createBreakOverlayService({ getMainWindow })
 
   function openBreakOverlay(reason: BreakOverlayOpenReason): BreakOverlayTriggerPayload {
@@ -135,6 +143,14 @@ export function registerPahingaIpc(
   })
   breakReminderScheduler.start()
 
+  const waterReminderScheduler = createWaterReminderScheduler({
+    reminderRepo,
+    focusSessionService,
+    settingsService,
+    getMainWindow
+  })
+  waterReminderScheduler.start()
+
   const dashboardService = createDashboardService(
     settingsService,
     focusRepo,
@@ -162,6 +178,11 @@ export function registerPahingaIpc(
   ipcMain.removeHandler(REMINDER_IPC_CHANNELS.COMPLETE)
   ipcMain.removeHandler(REMINDER_IPC_CHANNELS.SNOOZE)
   ipcMain.removeHandler(REMINDER_IPC_CHANNELS.SKIP)
+  ipcMain.removeHandler(WATER_REMINDER_IPC_CHANNELS.COMPLETE)
+  ipcMain.removeHandler(WATER_REMINDER_IPC_CHANNELS.SNOOZE)
+  ipcMain.removeHandler(WATER_REMINDER_IPC_CHANNELS.SKIP)
+  ipcMain.removeHandler(STRETCH_IPC_CHANNELS.COMPLETE)
+  ipcMain.removeHandler(STRETCH_IPC_CHANNELS.GET_TODAY)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.OPEN_BREAK)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.CLOSE_BREAK)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.START_BREAK)
@@ -259,6 +280,42 @@ export function registerPahingaIpc(
     const id = sanitizeReminderId(raw)
     breakReminderActions.skip(id)
     return dashboardService.getToday()
+  })
+
+  ipcMain.handle(WATER_REMINDER_IPC_CHANNELS.COMPLETE, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    waterReminderActions.complete(id)
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(WATER_REMINDER_IPC_CHANNELS.SNOOZE, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    waterReminderActions.snooze(id)
+    waterReminderScheduler.recordSnooze()
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(WATER_REMINDER_IPC_CHANNELS.SKIP, (_event, raw: unknown) => {
+    const id = sanitizeReminderId(raw)
+    waterReminderActions.skip(id)
+    return dashboardService.getToday()
+  })
+
+  ipcMain.handle(STRETCH_IPC_CHANNELS.COMPLETE, (_event, payload: unknown) => {
+    if (!isPlainObject(payload)) throw new Error('Invalid stretch:complete payload.')
+    const { stretchType, durationSeconds } = payload
+    const validTypes: StretchType[] = ['neck', 'shoulder', 'wrist', 'eyes']
+    if (typeof stretchType !== 'string' || !validTypes.includes(stretchType as StretchType)) {
+      throw new Error('Invalid stretchType.')
+    }
+    if (typeof durationSeconds !== 'number' || !Number.isFinite(durationSeconds) || durationSeconds < 0) {
+      throw new Error('Invalid durationSeconds.')
+    }
+    return stretchService.complete(stretchType as StretchType, Math.round(durationSeconds))
+  })
+
+  ipcMain.handle(STRETCH_IPC_CHANNELS.GET_TODAY, () => {
+    return stretchService.getToday()
   })
 
   ipcMain.handle(OVERLAY_IPC_CHANNELS.OPEN_BREAK, (_event, rawReason: unknown) => {
