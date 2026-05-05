@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Dariel\\\\Documents\\\\own-projects\\\\pahinga-workspace\\\\pahinga-app\" -Force)"
+    ]
+  }
+}

@@ -1,21 +1,30 @@
-import { BrowserWindow, dialog, ipcMain, type OpenDialogOptions } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Notification, type OpenDialogOptions } from 'electron'
 import type Database from 'better-sqlite3'
 import {
+  BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
   OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS
 } from '../../shared/ipc'
-import type { BreakOverlayTriggerPayload, BreakOverlayOpenReason } from '../../shared/types'
+import type {
+  BreakOverlayTriggerPayload,
+  BreakOverlayOpenReason,
+  BreakReminderTriggerPayload
+} from '../../shared/types'
 import { createFocusSessionRepository } from '../repositories/focusSessionRepository'
 import { createReminderRepository } from '../repositories/reminderRepository'
 import { createStretchLogRepository } from '../repositories/stretchLogRepository'
 import { createBreakReminderActions } from '../services/breakReminderActions'
 import { createBreakOverlayService } from '../services/breakOverlayService'
 import { createBreakReminderScheduler } from '../services/breakReminderScheduler'
-import { BREAK_OVERLAY_MESSAGE, breakReminderModalFields } from '../services/breakReminderCopy'
-import { overlayMediaUrlFromPath } from '../services/overlayMediaUrl'
+import {
+  BREAK_OVERLAY_MESSAGE,
+  BREAK_REMINDER_NOTIFICATION_BODY,
+  breakReminderModalFields
+} from '../services/breakReminderCopy'
+import { getDefaultNekoUrls } from '../services/overlayMediaUrl'
 import { createDashboardService } from '../services/dashboardService'
 import { createFocusSessionService } from '../services/focusSessionService'
 import { createSettingsService } from '../services/settingsService'
@@ -84,11 +93,36 @@ export function registerPahingaIpc(
       message: BREAK_OVERLAY_MESSAGE,
       instruction: fields.instruction,
       suggestedType: fields.suggestedType,
-      mediaPath: overlayMediaUrlFromPath(settings.overlayMediaPath),
+      mediaPath: null,
       allowEmergencyExit: settings.allowEmergencyExit,
-      allowSnooze: settings.allowOverlaySnooze
+      allowSnooze: settings.allowOverlaySnooze,
+      overlayMode: settings.overlayMode
     }
-    breakOverlayService.open(payload)
+
+    // Always send OS desktop notification (respects notificationsEnabled setting).
+    if (settings.notificationsEnabled && Notification.isSupported()) {
+      const n = new Notification({ title: 'Pahinga', body: BREAK_REMINDER_NOTIFICATION_BODY })
+      n.show()
+    }
+
+    if (settings.restLockModeEnabled && settings.overlayMode !== 'soft_reminder') {
+      breakOverlayService.open(payload)
+    } else {
+      // Soft reminder or rest lock disabled: show the in-app modal instead.
+      const reminderPayload: BreakReminderTriggerPayload = {
+        reminderId: reminder.id,
+        suggestedType: fields.suggestedType,
+        durationMinutes: fields.durationMinutes,
+        instruction: fields.instruction
+      }
+      const win = getMainWindow()
+      if (win && !win.isDestroyed()) {
+        if (win.isMinimized()) win.restore()
+        win.focus()
+        win.webContents.send(BREAK_REMINDER_EVENT, reminderPayload)
+      }
+    }
+
     return payload
   }
 
@@ -270,5 +304,9 @@ export function registerPahingaIpc(
     breakReminderActions.complete(id)
     // Keep overlay open after completion so user can choose next action manually.
     return dashboardService.getToday()
+  })
+
+  ipcMain.handle(OVERLAY_IPC_CHANNELS.GET_NEKO_URLS, () => {
+    return getDefaultNekoUrls(app.getAppPath())
   })
 }

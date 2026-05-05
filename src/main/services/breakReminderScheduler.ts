@@ -11,7 +11,6 @@ import {
   breakReminderModalFields
 } from './breakReminderCopy'
 import type { BreakOverlayService } from './breakOverlayService'
-import { overlayMediaUrlFromPath } from './overlayMediaUrl'
 
 const TICK_MS = 12_000
 const SNOOZE_MS = 5 * 60 * 1000
@@ -107,9 +106,10 @@ export function createBreakReminderScheduler(deps: Deps) {
         message: BREAK_OVERLAY_MESSAGE,
         instruction: fields.instruction,
         suggestedType: fields.suggestedType,
-        mediaPath: overlayMediaUrlFromPath(settings.overlayMediaPath),
+        mediaPath: null,
         allowEmergencyExit: settings.allowEmergencyExit,
-        allowSnooze: settings.allowOverlaySnooze
+        allowSnooze: settings.allowOverlaySnooze,
+        overlayMode: settings.overlayMode
       }
       deps.breakOverlayService.open(overlayPayload)
     } else {

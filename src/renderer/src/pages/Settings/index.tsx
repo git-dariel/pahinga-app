@@ -65,9 +65,30 @@ export default function Settings(): React.JSX.Element {
   const [startupOn, setStartupOn] = useState(false)
   const [restLockEnabled, setRestLockEnabled] = useState(false)
   const [overlayMode, setOverlayMode] = useState<OverlayMode>('soft_reminder')
-  const [overlayMediaPath, setOverlayMediaPath] = useState('')
   const [allowEmergencyExit, setAllowEmergencyExit] = useState(true)
   const [allowOverlaySnooze, setAllowOverlaySnooze] = useState(true)
+  const [showStrictWarning, setShowStrictWarning] = useState(false)
+  const [pendingStrictConfirm, setPendingStrictConfirm] = useState(false)
+
+  function handleOverlayModeChange(value: OverlayMode): void {
+    if (value === 'strict_rest_lock') {
+      setShowStrictWarning(true)
+      setPendingStrictConfirm(true)
+    } else {
+      setOverlayMode(value)
+    }
+  }
+
+  function confirmStrictMode(): void {
+    setOverlayMode('strict_rest_lock')
+    setShowStrictWarning(false)
+    setPendingStrictConfirm(false)
+  }
+
+  function cancelStrictMode(): void {
+    setShowStrictWarning(false)
+    setPendingStrictConfirm(false)
+  }
 
   useEffect(() => {
     if (!data) return
@@ -80,7 +101,6 @@ export default function Settings(): React.JSX.Element {
     setStartupOn(data.startupEnabled)
     setRestLockEnabled(data.restLockModeEnabled)
     setOverlayMode(data.overlayMode)
-    setOverlayMediaPath(data.overlayMediaPath ?? '')
     setAllowEmergencyExit(data.allowEmergencyExit)
     setAllowOverlaySnooze(data.allowOverlaySnooze)
   }, [data])
@@ -100,7 +120,6 @@ export default function Settings(): React.JSX.Element {
       startupOn !== data.startupEnabled ||
       restLockEnabled !== data.restLockModeEnabled ||
       overlayMode !== data.overlayMode ||
-      overlayMediaPath !== (data.overlayMediaPath ?? '') ||
       allowEmergencyExit !== data.allowEmergencyExit ||
       allowOverlaySnooze !== data.allowOverlaySnooze
     )
@@ -115,7 +134,6 @@ export default function Settings(): React.JSX.Element {
     startupOn,
     restLockEnabled,
     overlayMode,
-    overlayMediaPath,
     allowEmergencyExit,
     allowOverlaySnooze
   ])
@@ -133,7 +151,6 @@ export default function Settings(): React.JSX.Element {
         startupEnabled: startupOn,
         restLockModeEnabled: restLockEnabled,
         overlayMode,
-        overlayMediaPath: overlayMediaPath.trim(),
         allowEmergencyExit,
         allowOverlaySnooze
       })
@@ -330,8 +347,8 @@ export default function Settings(): React.JSX.Element {
               </div>
               <select
                 className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-44"
-                value={overlayMode}
-                onChange={(e) => setOverlayMode(e.target.value as OverlayMode)}
+                value={pendingStrictConfirm ? 'strict_rest_lock' : overlayMode}
+                onChange={(e) => handleOverlayModeChange(e.target.value as OverlayMode)}
               >
                 {OVERLAY_MODES.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -339,47 +356,6 @@ export default function Settings(): React.JSX.Element {
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">Overlay media (GIF or MP4)</p>
-                <p className="text-xs text-muted">
-                  Choose a file from your computer, or paste a path. Leave empty for the default illustration.
-                </p>
-                <input
-                  type="text"
-                  value={overlayMediaPath}
-                  onChange={(e) => setOverlayMediaPath(e.target.value)}
-                  placeholder="No file selected"
-                  className="mt-2 w-full max-w-md text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background"
-                />
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    void (async () => {
-                      try {
-                        const picked = await pahingaApi.pickOverlayMedia()
-                        if (picked) setOverlayMediaPath(picked)
-                      } catch {
-                        showToast('Could not open file picker.', 'error')
-                      }
-                    })()
-                  }
-                  className="px-3 py-1.5 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-background"
-                >
-                  Choose file…
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOverlayMediaPath('')}
-                  className="px-3 py-1.5 rounded-lg border border-border text-sm font-medium text-muted hover:text-foreground hover:bg-background"
-                >
-                  Clear
-                </button>
-              </div>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -417,6 +393,48 @@ export default function Settings(): React.JSX.Element {
       >
         {isSaving ? 'Saving…' : 'Save Settings'}
       </button>
+
+      {/* Strict Rest Lock warning modal */}
+      {showStrictWarning ? (
+        <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 text-xl">⚠️</span>
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Enable Strict Rest Lock?</h2>
+                <p className="mt-2 text-sm text-muted leading-relaxed">
+                  In this mode, the break overlay will actively resist being dismissed. It will:
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-muted list-disc list-inside">
+                  <li>Prevent minimizing the overlay window</li>
+                  <li>Snap back to focus if you switch apps</li>
+                  <li>Hide the Snooze button</li>
+                  <li>Require confirmation before Emergency Exit</li>
+                </ul>
+                <p className="mt-3 text-sm text-warning font-medium">
+                  Only enable this if you struggle to take breaks and want stronger enforcement. You can always change it back in Settings.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={confirmStrictMode}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-danger text-white text-sm font-semibold hover:bg-danger/90 transition-colors"
+              >
+                Enable Strict Mode
+              </button>
+              <button
+                type="button"
+                onClick={cancelStrictMode}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-background transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -32,6 +32,7 @@ export interface PahingaPreloadApi {
   overlayCompleteBreak(reminderId: number): Promise<DashboardToday>
   onOverlayBreakTriggered(callback: (payload: BreakOverlayTriggerPayload) => void): () => void
   getBreakOverlayPayload(): Promise<BreakOverlayTriggerPayload | null>
+  getNekoUrls(): Promise<{ intro: string; loop: string }>
 }
 
 export interface AppPreloadApi {

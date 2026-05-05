@@ -112,6 +112,10 @@ const pahinga = {
 
   getBreakOverlayPayload(): Promise<BreakOverlayTriggerPayload | null> {
     return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.GET_BREAK_PAYLOAD)
+  },
+
+  getNekoUrls(): Promise<{ intro: string; loop: string }> {
+    return ipcRenderer.invoke(OVERLAY_IPC_CHANNELS.GET_NEKO_URLS)
   }
 }
 

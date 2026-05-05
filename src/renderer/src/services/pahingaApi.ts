@@ -118,5 +118,9 @@ export const pahingaApi = {
 
   getBreakOverlayPayload(): Promise<BreakOverlayTriggerPayload | null> {
     return getPahinga().getBreakOverlayPayload()
+  },
+
+  getNekoUrls(): Promise<{ intro: string; loop: string }> {
+    return getPahinga().getNekoUrls()
   }
 }

@@ -27,7 +27,23 @@ export function BreakReminderModal(props: {
     }
     setPhase('prompt')
     const id = requestAnimationFrame(() => setEnter(true))
-    return () => cancelAnimationFrame(id)
+
+    // Voice notification so the user hears the reminder even if the app is in the background.
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(
+        'Time for a short break. Stand up, stretch, and rest your eyes.'
+      )
+      utterance.rate = 0.9
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+      window.speechSynthesis.speak(utterance)
+    }
+
+    return () => {
+      cancelAnimationFrame(id)
+      window.speechSynthesis?.cancel()
+    }
   }, [payload])
 
   useEffect(() => {
@@ -97,7 +113,7 @@ export function BreakReminderModal(props: {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/45 transition-opacity duration-200 ease-out ${
+      className={`fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/45 transition-opacity duration-200 ease-out ${
         enter ? 'opacity-100' : 'opacity-0'
       }`}
       role="presentation"

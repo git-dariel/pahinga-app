@@ -46,7 +46,8 @@ export const OVERLAY_IPC_CHANNELS = {
   START_BREAK: 'overlay:startBreak',
   SNOOZE_BREAK: 'overlay:snoozeBreak',
   EMERGENCY_EXIT: 'overlay:emergencyExit',
-  COMPLETE_BREAK: 'overlay:completeBreak'
+  COMPLETE_BREAK: 'overlay:completeBreak',
+  GET_NEKO_URLS: 'overlay:getNekoUrls'
 } as const
 
 /** Main process -> overlay renderer payload push. */

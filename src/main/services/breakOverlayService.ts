@@ -11,6 +11,7 @@ type Deps = {
 export function createBreakOverlayService(deps: Deps) {
   let overlayWindow: BrowserWindow | null = null
   let lastPayload: BreakOverlayTriggerPayload | null = null
+  let isStrictMode = false
 
   function getOverlayUrl(): string {
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -34,7 +35,7 @@ export function createBreakOverlayService(deps: Deps) {
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         sandbox: false,
-        // Allow file:// GIF/MP4 when overlay loads from http://localhost in dev.
+        // Allow file:// GIF/MP4/WebM when overlay loads from http://localhost in dev.
         webSecurity: false
       }
     })
@@ -44,6 +45,17 @@ export function createBreakOverlayService(deps: Deps) {
     win.once('ready-to-show', () => win.show())
     win.on('closed', () => {
       if (overlayWindow === win) overlayWindow = null
+    })
+
+    // Strict mode: prevent the user from minimizing or focusing away.
+    win.on('minimize', () => {
+      if (isStrictMode && !win.isDestroyed()) win.restore()
+    })
+    win.on('blur', () => {
+      if (isStrictMode && !win.isDestroyed()) {
+        win.setAlwaysOnTop(true, 'screen-saver')
+        win.focus()
+      }
     })
 
     const url = getOverlayUrl()
@@ -75,6 +87,8 @@ export function createBreakOverlayService(deps: Deps) {
 
     open(payload: BreakOverlayTriggerPayload): void {
       lastPayload = payload
+      isStrictMode = payload.overlayMode === 'strict_rest_lock'
+
       const win = ensureWindow()
       if (win.isMinimized()) win.restore()
       win.show()
@@ -97,6 +111,7 @@ export function createBreakOverlayService(deps: Deps) {
     },
 
     close(): void {
+      isStrictMode = false
       if (overlayWindow && !overlayWindow.isDestroyed()) {
         overlayWindow.hide()
       }
