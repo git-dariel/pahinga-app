@@ -31,6 +31,18 @@ export const pahingaApi = {
     return getPahinga().getAppInfo()
   },
 
+  windowMinimize(): Promise<boolean> {
+    return getPahinga().windowMinimize()
+  },
+
+  windowMaximize(): Promise<boolean> {
+    return getPahinga().windowMaximize()
+  },
+
+  windowClose(): Promise<boolean> {
+    return getPahinga().windowClose()
+  },
+
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return getPahinga().updateSettings(patch)
   },

@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   BREAK_DURATION_OPTIONS,
   BREAK_REMINDER_OPTIONS,
   FOCUS_DURATION_OPTIONS,
   WATER_REMINDER_OPTIONS
 } from '@shared/reminderIntervals'
-import type { DesktopNotificationStatus, NotificationPreviewKind } from '@shared/types'
-import type { OverlayMode } from '@shared/types/user-settings'
+import type { DesktopNotificationStatus, NotificationPreviewKind, OverlayMode } from '@shared/types'
+import { DesignButton, DesignCard, Pill, ScreenHeader } from '@renderer/components/design'
+import { Toggle } from '@renderer/components/ui'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
-import { Button, Card, PageShell, Select, Toggle } from '@renderer/components/ui'
 import { useUserSettings } from '@renderer/hooks/useUserSettings'
 import { pahingaApi } from '@renderer/services/pahingaApi'
 
@@ -18,67 +18,109 @@ function optionsWithValue(fixed: readonly number[], value: number): number[] {
   return [...set].sort((a, b) => a - b)
 }
 
-const OVERLAY_MODES = [
-  { value: 'soft_reminder', label: 'Soft Reminder' },
-  { value: 'focused_break_overlay', label: 'Focused Break Overlay' },
-  { value: 'strict_rest_lock', label: 'Strict Rest Lock' }
-] as const
+function SettingSelect({
+  value,
+  options,
+  onChange
+}: {
+  value: number
+  options: number[]
+  onChange: (next: number) => void
+}): React.JSX.Element {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="h-8 min-w-[140px] rounded-md border border-border bg-surface px-3 text-xs font-semibold text-foreground outline-none"
+    >
+      {options.map((m) => (
+        <option key={m} value={m}>
+          {m} minutes
+        </option>
+      ))}
+    </select>
+  )
+}
+
+function SettingModeSelect({
+  value,
+  onChange
+}: {
+  value: OverlayMode
+  onChange: (next: OverlayMode) => void
+}): React.JSX.Element {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as OverlayMode)}
+      className="h-8 min-w-[220px] rounded-md border border-border bg-surface px-3 text-xs font-semibold text-foreground outline-none"
+    >
+      <option value="focused_break_overlay">Focused break overlay</option>
+      <option value="strict_rest_lock">Strict rest lock</option>
+      <option value="soft_reminder">Soft reminder</option>
+    </select>
+  )
+}
+
+function SettingRow({
+  title,
+  description,
+  children
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <div className="flex min-h-[66px] items-center justify-between gap-6 border-b border-border px-5 last:border-b-0">
+      <div>
+        <p className="text-sm font-bold text-foreground">{title}</p>
+        <p className="mt-0.5 text-xs text-muted">{description}</p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function SettingsSection({
+  title,
+  description,
+  children
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+}): React.JSX.Element {
+  return (
+    <section className="mt-8">
+      <h2 className="text-sm font-bold text-foreground">{title}</h2>
+      <p className="mt-1 text-xs text-muted">{description}</p>
+      <DesignCard className="mt-3 overflow-hidden">{children}</DesignCard>
+    </section>
+  )
+}
 
 export default function Settings(): React.JSX.Element {
-  const { data, status, error, reload, save } = useUserSettings()
+  const { data, status, save, reload } = useUserSettings()
   const { showToast } = useToast()
-  const [isSaving, setIsSaving] = useState(false)
+  const [focusMinutes, setFocusMinutes] = useState(25)
+  const [breakMinutes, setBreakMinutes] = useState(5)
+  const [breakReminderMinutes, setBreakReminderMinutes] = useState(25)
+  const [waterMinutes, setWaterMinutes] = useState(60)
+  const [stretchOn, setStretchOn] = useState(true)
+  const [notificationsOn, setNotificationsOn] = useState(true)
+  const [startupOn, setStartupOn] = useState(false)
+  const [restLockModeOn, setRestLockModeOn] = useState(false)
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>('focused_break_overlay')
+  const [allowOverlaySnooze, setAllowOverlaySnooze] = useState(true)
+  const [allowEmergencyExit, setAllowEmergencyExit] = useState(true)
   const [notificationStatus, setNotificationStatus] = useState<DesktopNotificationStatus | null>(
     null
   )
   const [previewingNotification, setPreviewingNotification] =
     useState<NotificationPreviewKind | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
-  const [focusMinutes, setFocusMinutes] = useState<number>(25)
-  const [breakMinutes, setBreakMinutes] = useState<number>(5)
-  const [breakReminderMinutes, setBreakReminderMinutes] = useState<number>(25)
-  const [waterMinutes, setWaterMinutes] = useState<number>(60)
-  const [stretchOn, setStretchOn] = useState(true)
-  const [notificationsOn, setNotificationsOn] = useState(true)
-  const [startupOn, setStartupOn] = useState(false)
-  const [restLockEnabled, setRestLockEnabled] = useState(false)
-  const [overlayMode, setOverlayMode] = useState<OverlayMode>('soft_reminder')
-  const [allowEmergencyExit, setAllowEmergencyExit] = useState(true)
-  const [allowOverlaySnooze, setAllowOverlaySnooze] = useState(true)
-  const [showStrictWarning, setShowStrictWarning] = useState(false)
-  const [pendingStrictConfirm, setPendingStrictConfirm] = useState(false)
-  const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
-
-  function handleOverlayModeChange(value: OverlayMode): void {
-    if (value === 'strict_rest_lock') {
-      setShowStrictWarning(true)
-      setPendingStrictConfirm(true)
-    } else {
-      setOverlayMode(value)
-    }
-  }
-
-  function confirmStrictMode(): void {
-    setOverlayMode('strict_rest_lock')
-    setShowStrictWarning(false)
-    setPendingStrictConfirm(false)
-  }
-
-  function cancelStrictMode(): void {
-    setShowStrictWarning(false)
-    setPendingStrictConfirm(false)
-  }
-
-  const refreshNotificationStatus = useCallback(async (): Promise<void> => {
-    try {
-      setNotificationStatus(await pahingaApi.getNotificationStatus())
-    } catch {
-      setNotificationStatus(null)
-    }
-  }, [])
-
-  /* eslint-disable react-hooks/set-state-in-effect -- settings form fields are hydrated from IPC data. */
   useEffect(() => {
     if (!data) return
     setFocusMinutes(data.focusDuration)
@@ -88,12 +130,11 @@ export default function Settings(): React.JSX.Element {
     setStretchOn(data.stretchRemindersEnabled)
     setNotificationsOn(data.notificationsEnabled)
     setStartupOn(data.startupEnabled)
-    setRestLockEnabled(data.restLockModeEnabled)
+    setRestLockModeOn(data.restLockModeEnabled)
     setOverlayMode(data.overlayMode)
-    setAllowEmergencyExit(data.allowEmergencyExit)
     setAllowOverlaySnooze(data.allowOverlaySnooze)
+    setAllowEmergencyExit(data.allowEmergencyExit)
   }, [data])
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     let mounted = true
@@ -110,9 +151,6 @@ export default function Settings(): React.JSX.Element {
     }
   }, [])
 
-  const isLoading = status === 'loading' && !data
-  const loadFailed = status === 'error'
-
   const dirty = useMemo(() => {
     if (!data) return false
     return (
@@ -123,10 +161,10 @@ export default function Settings(): React.JSX.Element {
       stretchOn !== data.stretchRemindersEnabled ||
       notificationsOn !== data.notificationsEnabled ||
       startupOn !== data.startupEnabled ||
-      restLockEnabled !== data.restLockModeEnabled ||
+      restLockModeOn !== data.restLockModeEnabled ||
       overlayMode !== data.overlayMode ||
-      allowEmergencyExit !== data.allowEmergencyExit ||
-      allowOverlaySnooze !== data.allowOverlaySnooze
+      allowOverlaySnooze !== data.allowOverlaySnooze ||
+      allowEmergencyExit !== data.allowEmergencyExit
     )
   }, [
     data,
@@ -137,37 +175,11 @@ export default function Settings(): React.JSX.Element {
     stretchOn,
     notificationsOn,
     startupOn,
-    restLockEnabled,
+    restLockModeOn,
     overlayMode,
-    allowEmergencyExit,
-    allowOverlaySnooze
+    allowOverlaySnooze,
+    allowEmergencyExit
   ])
-
-  async function handleReset(): Promise<void> {
-    setIsResetting(true)
-    try {
-      const defaults = await pahingaApi.resetSettingsToDefaults()
-      setFocusMinutes(defaults.focusDuration)
-      setBreakMinutes(defaults.breakDuration)
-      setBreakReminderMinutes(defaults.breakInterval)
-      setWaterMinutes(defaults.waterInterval)
-      setStretchOn(defaults.stretchRemindersEnabled)
-      setNotificationsOn(defaults.notificationsEnabled)
-      setStartupOn(defaults.startupEnabled)
-      setRestLockEnabled(defaults.restLockModeEnabled)
-      setOverlayMode(defaults.overlayMode)
-      setAllowEmergencyExit(defaults.allowEmergencyExit)
-      setAllowOverlaySnooze(defaults.allowOverlaySnooze)
-      await reload()
-      await refreshNotificationStatus()
-      showToast('Settings reset to defaults.', 'success')
-    } catch {
-      showToast('Could not reset settings.', 'error')
-    } finally {
-      setIsResetting(false)
-      setShowResetConfirm(false)
-    }
-  }
 
   async function handleSave(): Promise<void> {
     setIsSaving(true)
@@ -180,15 +192,30 @@ export default function Settings(): React.JSX.Element {
         stretchRemindersEnabled: stretchOn,
         notificationsEnabled: notificationsOn,
         startupEnabled: startupOn,
-        restLockModeEnabled: restLockEnabled,
+        restLockModeEnabled: restLockModeOn,
         overlayMode,
-        allowEmergencyExit,
-        allowOverlaySnooze
+        allowOverlaySnooze,
+        allowEmergencyExit
       })
-      await refreshNotificationStatus()
+      setNotificationStatus(await pahingaApi.getNotificationStatus())
       showToast('Settings saved successfully.', 'success')
     } catch {
       showToast('Could not save settings.', 'error')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function handleResetToDefaults(): Promise<void> {
+    if (!window.confirm('Reset all settings to defaults? This cannot be undone.')) return
+    setIsSaving(true)
+    try {
+      await pahingaApi.resetSettingsToDefaults()
+      await reload()
+      setNotificationStatus(await pahingaApi.getNotificationStatus())
+      showToast('Settings reset to defaults.', 'success')
+    } catch {
+      showToast('Could not reset settings.', 'error')
     } finally {
       setIsSaving(false)
     }
@@ -198,12 +225,10 @@ export default function Settings(): React.JSX.Element {
     setPreviewingNotification(kind)
     try {
       const shown = await pahingaApi.previewNotification(kind)
-      if (shown) {
-        showToast('Preview notification sent.', 'success')
-      } else {
-        await refreshNotificationStatus()
-        showToast('Desktop notifications are not ready.', 'error')
-      }
+      showToast(
+        shown ? 'Preview notification sent.' : 'Desktop notifications are not ready.',
+        shown ? 'success' : 'error'
+      )
     } catch {
       showToast('Could not send preview notification.', 'error')
     } finally {
@@ -211,378 +236,143 @@ export default function Settings(): React.JSX.Element {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-sm text-muted mt-1">Loading your preferences…</p>
-        </div>
-        <div className="h-40 max-w-lg rounded-xl border border-border bg-surface animate-pulse" />
-      </div>
-    )
-  }
-
-  if (loadFailed && !data) {
-    return (
-      <div className="p-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-sm text-muted mt-1">Customize your reminders and preferences.</p>
-        </div>
-        <div className="max-w-lg rounded-xl border border-danger/30 bg-surface px-5 py-4 text-sm text-danger">
-          <p className="font-semibold">Could not load settings</p>
-          <p className="mt-1 text-muted">{error?.message ?? 'Unknown error'}</p>
-          <button
-            type="button"
-            onClick={() => void reload()}
-            className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    )
+  if (status === 'loading' && !data) {
+    return <div className="mx-auto max-w-[696px] px-8 py-10 text-sm text-muted">Loading...</div>
   }
 
   return (
-    <PageShell
-      title="Settings"
-      description="Customize your reminders and preferences."
-      className="max-w-3xl"
-    >
-      {error && data ? (
-        <div className="mb-4 max-w-lg rounded-lg border border-warning/40 bg-surface px-4 py-3 text-sm text-warning">
-          {error.message}
-        </div>
-      ) : null}
+    <div className="mx-auto max-w-[696px] px-8 py-10">
+      <ScreenHeader title="Settings" description="Customize your reminders and preferences." />
 
-      <Card className="max-w-lg divide-y divide-border">
-        <div className="px-6 py-5">
-          <p className="text-sm font-semibold text-foreground mb-4">Focus & Breaks</p>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Focus Duration</p>
-                <p className="text-xs text-muted">Default session length</p>
-              </div>
-              <Select
-                className="min-w-36"
-                value={focusMinutes}
-                onChange={(e) => setFocusMinutes(Number(e.target.value))}
-              >
-                {optionsWithValue(FOCUS_DURATION_OPTIONS, data?.focusDuration ?? focusMinutes).map(
-                  (m) => (
-                    <option key={m} value={m}>
-                      {m} minutes
-                    </option>
-                  )
-                )}
-              </Select>
-            </div>
+      <SettingsSection title="Focus & breaks" description="The shape of your work rhythm.">
+        <SettingRow title="Focus duration" description="Default session length">
+          <SettingSelect
+            value={focusMinutes}
+            options={optionsWithValue(FOCUS_DURATION_OPTIONS, focusMinutes)}
+            onChange={setFocusMinutes}
+          />
+        </SettingRow>
+        <SettingRow title="Break duration" description="How long each break lasts">
+          <SettingSelect
+            value={breakMinutes}
+            options={optionsWithValue(BREAK_DURATION_OPTIONS, breakMinutes)}
+            onChange={setBreakMinutes}
+          />
+        </SettingRow>
+        <SettingRow title="Break reminder interval" description="How often to remind you">
+          <SettingSelect
+            value={breakReminderMinutes}
+            options={optionsWithValue(BREAK_REMINDER_OPTIONS, breakReminderMinutes)}
+            onChange={setBreakReminderMinutes}
+          />
+        </SettingRow>
+      </SettingsSection>
 
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Break Duration</p>
-                <p className="text-xs text-muted">How long each break lasts</p>
-              </div>
-              <Select
-                className="min-w-36"
-                value={breakMinutes}
-                onChange={(e) => setBreakMinutes(Number(e.target.value))}
-              >
-                {optionsWithValue(BREAK_DURATION_OPTIONS, data?.breakDuration ?? breakMinutes).map(
-                  (m) => (
-                    <option key={m} value={m}>
-                      {m} minutes
-                    </option>
-                  )
-                )}
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Break Reminder Interval</p>
-                <p className="text-xs text-muted">How often to remind you to take a break</p>
-              </div>
-              <Select
-                className="min-w-36"
-                value={breakReminderMinutes}
-                onChange={(e) => setBreakReminderMinutes(Number(e.target.value))}
-              >
-                {optionsWithValue(
-                  BREAK_REMINDER_OPTIONS,
-                  data?.breakInterval ?? breakReminderMinutes
-                ).map((m) => (
-                  <option key={m} value={m}>
-                    {m} minutes
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        <div className="px-6 py-5">
-          <p className="text-sm font-semibold text-foreground mb-4">Reminders</p>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Water Reminder</p>
-                <p className="text-xs text-muted">Remind me to drink water every</p>
-              </div>
-              <Select
-                className="min-w-36"
-                value={waterMinutes}
-                onChange={(e) => setWaterMinutes(Number(e.target.value))}
-              >
-                {optionsWithValue(WATER_REMINDER_OPTIONS, data?.waterInterval ?? waterMinutes).map(
-                  (m) => (
-                    <option key={m} value={m}>
-                      {m} minutes
-                    </option>
-                  )
-                )}
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Stretch Reminders</p>
-                <p className="text-xs text-muted">Include stretch suggestions during breaks</p>
-              </div>
-              <Toggle
-                pressed={stretchOn}
-                onPressedChange={setStretchOn}
-                label="Stretch reminders"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Desktop Notifications</p>
-                <p className="text-xs text-muted">Show system notifications for reminders</p>
-              </div>
-              <Toggle
-                pressed={notificationsOn}
-                onPressedChange={setNotificationsOn}
-                label="Desktop notifications"
-              />
-            </div>
-
-            {notificationStatus && notificationStatus.permissionStatus !== 'ready' ? (
-              <div className="rounded-lg border border-warning/40 bg-background px-4 py-3 text-sm text-warning">
-                {notificationStatus.message}
-              </div>
-            ) : null}
-
-            <div className="rounded-lg border border-border bg-background px-4 py-3">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Reminder Preview</p>
-                  <p className="text-xs text-muted">
-                    Send a sample notification and click it to preview the modal flow.
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted">
-                  {notificationStatus?.permissionStatus === 'ready' ? 'Ready' : 'Off'}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={
-                    previewingNotification !== null ||
-                    notificationStatus?.permissionStatus !== 'ready'
-                  }
-                  onClick={() => void handlePreviewNotification('break')}
-                  className="min-h-8 px-3 py-1.5 text-xs"
-                >
-                  {previewingNotification === 'break' ? 'Sending...' : 'Preview Break'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={
-                    previewingNotification !== null ||
-                    notificationStatus?.permissionStatus !== 'ready'
-                  }
-                  onClick={() => void handlePreviewNotification('water')}
-                  className="min-h-8 px-3 py-1.5 text-xs"
-                >
-                  {previewingNotification === 'water' ? 'Sending...' : 'Preview Water'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-foreground">Start on System Startup</p>
-              <p className="text-xs text-muted">Launch Pahinga when you log in</p>
-            </div>
-            <Toggle
-              pressed={startupOn}
-              onPressedChange={setStartupOn}
-              label="Start on system startup"
-            />
-          </div>
-        </div>
-
-        <div className="px-6 py-5">
-          <p className="text-sm font-semibold text-foreground mb-4">Break Overlay / Rest Lock</p>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Enable Rest Lock Mode</p>
-                <p className="text-xs text-muted">
-                  Show an always-on-top break overlay instead of only small reminders
-                </p>
-              </div>
-              <Toggle
-                pressed={restLockEnabled}
-                onPressedChange={setRestLockEnabled}
-                label="Enable rest lock mode"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Overlay Mode</p>
-                <p className="text-xs text-muted">Focused Break Overlay is recommended for MVP</p>
-              </div>
-              <Select
-                className="min-w-44"
-                value={pendingStrictConfirm ? 'strict_rest_lock' : overlayMode}
-                onChange={(e) => handleOverlayModeChange(e.target.value as OverlayMode)}
-              >
-                {OVERLAY_MODES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Allow Snooze in Overlay</p>
-                <p className="text-xs text-muted">
-                  Lets users snooze 5 minutes from the overlay screen
-                </p>
-              </div>
-              <Toggle
-                pressed={allowOverlaySnooze}
-                onPressedChange={setAllowOverlaySnooze}
-                label="Allow overlay snooze"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">Allow Emergency Exit</p>
-                <p className="text-xs text-muted">
-                  Keeps a safe way out available to avoid trapping users
-                </p>
-              </div>
-              <Toggle
-                pressed={allowEmergencyExit}
-                onPressedChange={setAllowEmergencyExit}
-                label="Allow emergency exit"
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <div className="mt-5 flex items-center gap-3">
-        <button
-          type="button"
-          disabled={isSaving || !dirty}
-          onClick={() => void handleSave()}
-          className="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+      <SettingsSection title="Break overlay" description="What happens when it's time to rest.">
+        <SettingRow title="Enable rest-lock mode" description="Show always-on-top break overlay">
+          <Toggle
+            pressed={restLockModeOn}
+            onPressedChange={setRestLockModeOn}
+            label="Enable rest-lock mode"
+          />
+        </SettingRow>
+        <SettingRow title="Overlay mode" description="Focused break overlay is recommended">
+          <SettingModeSelect value={overlayMode} onChange={setOverlayMode} />
+        </SettingRow>
+        <SettingRow title="Allow snooze in overlay" description="Snooze 5 minutes from the overlay">
+          <Toggle
+            pressed={allowOverlaySnooze}
+            onPressedChange={setAllowOverlaySnooze}
+            label="Allow snooze in overlay"
+          />
+        </SettingRow>
+        <SettingRow
+          title="Allow emergency exit"
+          description="Keep a safe way out always available"
         >
-          {isSaving ? 'Saving…' : 'Save Settings'}
-        </button>
+          <Toggle
+            pressed={allowEmergencyExit}
+            onPressedChange={setAllowEmergencyExit}
+            label="Allow emergency exit"
+          />
+        </SettingRow>
+      </SettingsSection>
 
-        {showResetConfirm ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted">Reset everything to defaults?</span>
-            <button
-              type="button"
-              disabled={isResetting}
-              onClick={() => void handleReset()}
-              className="px-3 py-1.5 bg-danger text-white text-xs font-semibold rounded-lg hover:bg-danger/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-            >
-              {isResetting ? 'Resetting…' : 'Yes, reset'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowResetConfirm(false)}
-              className="px-3 py-1.5 border border-border text-foreground text-xs font-semibold rounded-lg hover:bg-background transition-colors"
-            >
-              Cancel
-            </button>
+      <SettingsSection title="Reminders" description="Gentle nudges throughout your day.">
+        <SettingRow title="Water reminder" description="Remind me to drink water every">
+          <SettingSelect
+            value={waterMinutes}
+            options={optionsWithValue(WATER_REMINDER_OPTIONS, waterMinutes)}
+            onChange={setWaterMinutes}
+          />
+        </SettingRow>
+        <SettingRow title="Stretch reminders" description="Include stretches during breaks">
+          <Toggle pressed={stretchOn} onPressedChange={setStretchOn} label="Stretch reminders" />
+        </SettingRow>
+        <SettingRow title="Desktop notifications" description="Show system notifications">
+          <Toggle
+            pressed={notificationsOn}
+            onPressedChange={setNotificationsOn}
+            label="Desktop notifications"
+          />
+        </SettingRow>
+        <div className="m-5 rounded-md border border-border bg-background/60 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-foreground">Reminder preview</p>
+              <p className="mt-0.5 text-xs text-muted">Send a sample notification.</p>
+            </div>
+            <Pill className="px-3 py-1 text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              {notificationStatus?.permissionStatus === 'ready' ? 'Ready' : 'Off'}
+            </Pill>
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowResetConfirm(true)}
-            className="px-5 py-2.5 border border-border text-muted text-sm font-medium rounded-lg hover:bg-background hover:text-foreground transition-colors"
-          >
-            Reset to Defaults
-          </button>
-        )}
-      </div>
-
-      {/* Strict Rest Lock warning modal */}
-      {showStrictWarning ? (
-        <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/50">
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 shadow-xl">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 text-xl">⚠️</span>
-              <div>
-                <h2 className="text-base font-semibold text-foreground">
-                  Enable Strict Rest Lock?
-                </h2>
-                <p className="mt-2 text-sm text-muted leading-relaxed">
-                  In this mode, the break overlay will actively resist being dismissed. It will:
-                </p>
-                <ul className="mt-2 space-y-1 text-sm text-muted list-disc list-inside">
-                  <li>Prevent minimizing the overlay window</li>
-                  <li>Snap back to focus if you switch apps</li>
-                  <li>Hide the Snooze button</li>
-                  <li>Require confirmation before Emergency Exit</li>
-                </ul>
-                <p className="mt-3 text-sm text-warning font-medium">
-                  Only enable this if you struggle to take breaks and want stronger enforcement. You
-                  can always change it back in Settings.
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 flex gap-2">
-              <button
-                type="button"
-                onClick={confirmStrictMode}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-danger text-white text-sm font-semibold hover:bg-danger/90 transition-colors"
-              >
-                Enable Strict Mode
-              </button>
-              <button
-                type="button"
-                onClick={cancelStrictMode}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-background transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
+          <div className="mt-3 flex gap-2">
+            <DesignButton
+              type="button"
+              disabled={
+                previewingNotification !== null || notificationStatus?.permissionStatus !== 'ready'
+              }
+              onClick={() => void handlePreviewNotification('break')}
+            >
+              Preview break
+            </DesignButton>
+            <DesignButton
+              type="button"
+              disabled={
+                previewingNotification !== null || notificationStatus?.permissionStatus !== 'ready'
+              }
+              onClick={() => void handlePreviewNotification('water')}
+            >
+              Preview water
+            </DesignButton>
           </div>
         </div>
-      ) : null}
-    </PageShell>
+      </SettingsSection>
+
+      <SettingsSection title="App" description="Launch and background behavior.">
+        <SettingRow title="Start on system startup" description="Launch Pahinga when you log in">
+          <Toggle
+            pressed={startupOn}
+            onPressedChange={setStartupOn}
+            label="Start on system startup"
+          />
+        </SettingRow>
+      </SettingsSection>
+
+      <div className="mt-6 flex items-center justify-between">
+        <DesignButton type="button" disabled={isSaving} onClick={() => void handleResetToDefaults()}>
+          Reset to defaults
+        </DesignButton>
+        <DesignButton
+          type="button"
+          variant="primary"
+          disabled={!dirty || isSaving}
+          onClick={() => void handleSave()}
+        >
+          {isSaving ? 'Saving...' : 'Save settings'}
+        </DesignButton>
+      </div>
+    </div>
   )
 }

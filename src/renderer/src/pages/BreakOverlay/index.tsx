@@ -115,8 +115,8 @@ export default function BreakOverlay(): React.JSX.Element {
 
   if (!payload) {
     return (
-      <div className="h-screen w-screen bg-transparent text-white flex items-center justify-center">
-        <p className="text-sm text-white/85">Preparing break overlay…</p>
+      <div className="flex h-screen w-screen items-center justify-center bg-transparent text-surface">
+        <p className="text-sm text-background/90">Preparing break overlay...</p>
       </div>
     )
   }
@@ -138,7 +138,9 @@ export default function BreakOverlay(): React.JSX.Element {
           muted
           playsInline
           onEnded={onVideoEnded}
-          className="h-full w-full object-contain object-bottom drop-shadow-2xl"
+          className={`h-full w-full object-contain object-bottom drop-shadow-2xl ${
+            videoStage === 'intro' ? 'overlay-neko-intro-slide' : ''
+          }`}
         />
       </div>
 
@@ -147,23 +149,23 @@ export default function BreakOverlay(): React.JSX.Element {
         className="absolute left-0 inset-y-0 flex flex-col justify-center px-10 z-20"
         style={{ width: '50%' }}
       >
-        <p className="text-xs uppercase tracking-widest text-cyan-300/80 font-medium">
+        <p className="text-xs font-medium uppercase tracking-widest text-primary-soft">
           {payload.suggestedType}
         </p>
-        <h1 className="text-3xl md:text-4xl font-bold text-white mt-2 leading-tight drop-shadow-lg">
+        <h1 className="mt-2 text-3xl font-bold leading-tight text-surface drop-shadow-lg md:text-4xl">
           {payload.message}
         </h1>
-        <p className="text-base text-white/75 mt-2 drop-shadow">{payload.instruction}</p>
+        <p className="mt-2 text-base text-background/85 drop-shadow">{payload.instruction}</p>
 
         {isStrict && phase !== 'done' ? (
-          <p className="mt-3 text-xs text-amber-300/90 font-medium">
+          <p className="mt-3 text-xs font-medium text-warning/95">
             Strict Rest Lock is active. Stay away from work until your break ends.
           </p>
         ) : null}
 
         {phase === 'breaking' ? (
           <p
-            className="text-8xl font-bold tabular-nums mt-6 text-white"
+            className="mt-6 text-8xl font-bold tabular-nums text-surface"
             style={{ textShadow: '0 2px 24px rgba(0,0,0,0.7)' }}
           >
             {formatClock(secondsLeft)}
@@ -175,7 +177,7 @@ export default function BreakOverlay(): React.JSX.Element {
             <button
               type="button"
               onClick={() => void onStartBreak()}
-              className="w-full px-5 py-3 rounded-xl bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400 transition-colors"
+              className="w-full rounded-xl bg-primary px-5 py-3 font-semibold text-surface transition-colors hover:bg-primary/90"
             >
               Start Break
             </button>
@@ -185,7 +187,7 @@ export default function BreakOverlay(): React.JSX.Element {
               <button
                 type="button"
                 onClick={() => void onSnooze()}
-                className="w-full px-5 py-3 rounded-xl border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors"
+                className="w-full rounded-xl border border-border/60 px-5 py-3 font-semibold text-surface transition-colors hover:bg-surface/10"
               >
                 Snooze 5 min
               </button>
@@ -194,22 +196,22 @@ export default function BreakOverlay(): React.JSX.Element {
             {/* Emergency Exit */}
             {payload.allowEmergencyExit ? (
               showExitConfirm ? (
-                <div className="rounded-xl border border-red-400/40 bg-black/40 p-4 space-y-3">
-                  <p className="text-sm text-white/90 font-medium">
+                <div className="space-y-3 rounded-xl border border-danger/40 bg-black/40 p-4">
+                  <p className="text-sm font-medium text-background/95">
                     Are you sure? Exiting early defeats the purpose of your break.
                   </p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => void onEmergencyExit()}
-                      className="flex-1 px-4 py-2 rounded-lg bg-red-500/80 text-white text-sm font-semibold hover:bg-red-500 transition-colors"
+                      className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-surface transition-colors hover:bg-danger/90"
                     >
                       Exit Anyway
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowExitConfirm(false)}
-                      className="flex-1 px-4 py-2 rounded-lg border border-white/20 text-white/70 text-sm font-medium hover:bg-white/10 transition-colors"
+                      className="flex-1 rounded-lg border border-border/50 px-4 py-2 text-sm font-medium text-background/80 transition-colors hover:bg-surface/10"
                     >
                       Keep Resting
                     </button>
@@ -219,10 +221,10 @@ export default function BreakOverlay(): React.JSX.Element {
                 <button
                   type="button"
                   onClick={() => void onEmergencyExit()}
-                  className={`w-full px-5 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                  className={`w-full rounded-xl border px-5 py-3 text-sm font-medium transition-colors ${
                     isStrict
-                      ? 'border-white/10 text-white/30 hover:text-white/50 hover:bg-white/5'
-                      : 'border-white/15 text-white/70 hover:bg-white/5'
+                      ? 'border-border/20 text-background/40 hover:bg-surface/5 hover:text-background/60'
+                      : 'border-border/35 text-background/80 hover:bg-surface/8'
                   }`}
                 >
                   Emergency Exit
@@ -239,7 +241,7 @@ export default function BreakOverlay(): React.JSX.Element {
               <button
                 type="button"
                 onClick={() => void onSnooze()}
-                className="w-full px-5 py-2.5 rounded-xl border border-white/20 text-white/70 text-sm font-medium hover:bg-white/10 transition-colors"
+                className="w-full rounded-xl border border-border/40 px-5 py-2.5 text-sm font-medium text-background/80 transition-colors hover:bg-surface/10"
               >
                 Snooze 5 min
               </button>
@@ -247,22 +249,22 @@ export default function BreakOverlay(): React.JSX.Element {
 
             {payload.allowEmergencyExit ? (
               showExitConfirm ? (
-                <div className="rounded-xl border border-red-400/40 bg-black/40 p-4 space-y-3">
-                  <p className="text-sm text-white/90 font-medium">
+                <div className="space-y-3 rounded-xl border border-danger/40 bg-black/40 p-4">
+                  <p className="text-sm font-medium text-background/95">
                     Are you sure? Exiting early defeats the purpose of your break.
                   </p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => void onEmergencyExit()}
-                      className="flex-1 px-4 py-2 rounded-lg bg-red-500/80 text-white text-sm font-semibold hover:bg-red-500 transition-colors"
+                      className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-surface transition-colors hover:bg-danger/90"
                     >
                       Exit Anyway
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowExitConfirm(false)}
-                      className="flex-1 px-4 py-2 rounded-lg border border-white/20 text-white/70 text-sm font-medium hover:bg-white/10 transition-colors"
+                      className="flex-1 rounded-lg border border-border/50 px-4 py-2 text-sm font-medium text-background/80 transition-colors hover:bg-surface/10"
                     >
                       Keep Resting
                     </button>
@@ -272,10 +274,10 @@ export default function BreakOverlay(): React.JSX.Element {
                 <button
                   type="button"
                   onClick={() => void onEmergencyExit()}
-                  className={`w-full px-5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  className={`w-full rounded-xl border px-5 py-2.5 text-sm font-medium transition-colors ${
                     isStrict
-                      ? 'border-white/10 text-white/25 hover:text-white/40 hover:bg-white/5'
-                      : 'border-white/15 text-white/60 hover:bg-white/5'
+                      ? 'border-border/20 text-background/35 hover:bg-surface/5 hover:text-background/55'
+                      : 'border-border/35 text-background/75 hover:bg-surface/8'
                   }`}
                 >
                   Emergency Exit
@@ -287,34 +289,34 @@ export default function BreakOverlay(): React.JSX.Element {
 
         {phase === 'done' ? (
           <div className="mt-6 space-y-3 max-w-xs">
-            <p className="text-xl font-semibold text-white drop-shadow">
+            <p className="text-xl font-semibold text-surface drop-shadow">
               Break complete. Great job resting!
             </p>
             <button
               type="button"
               onClick={() => void onCloseWindow()}
-              className="w-full px-5 py-3 rounded-xl bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400 transition-colors"
+              className="w-full rounded-xl bg-primary px-5 py-3 font-semibold text-surface transition-colors hover:bg-primary/90"
             >
               Continue Working
             </button>
             <button
               type="button"
               onClick={() => void onStartAnotherFocus()}
-              className="w-full px-5 py-3 rounded-xl border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors"
+              className="w-full rounded-xl border border-border/60 px-5 py-3 font-semibold text-surface transition-colors hover:bg-surface/10"
             >
               Start Another Focus Session
             </button>
             <button
               type="button"
               onClick={() => navigate('/stretch')}
-              className="w-full px-5 py-3 rounded-xl border border-white/15 text-white/70 font-medium hover:bg-white/5 transition-colors"
+              className="w-full rounded-xl border border-border/40 px-5 py-3 font-medium text-background/80 transition-colors hover:bg-surface/8"
             >
               Open Stretch Guide
             </button>
             <button
               type="button"
               onClick={() => void onCloseWindow()}
-              className="w-full px-5 py-3 rounded-xl border border-white/10 text-white/50 font-medium hover:bg-white/5 transition-colors"
+              className="w-full rounded-xl border border-border/30 px-5 py-3 font-medium text-background/60 transition-colors hover:bg-surface/8"
             >
               Exit Overlay
             </button>

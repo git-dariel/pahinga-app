@@ -18,6 +18,9 @@ import type {
 
 export interface PahingaPreloadApi {
   getAppInfo(): Promise<AppInfo>
+  windowMinimize(): Promise<boolean>
+  windowMaximize(): Promise<boolean>
+  windowClose(): Promise<boolean>
   getSettings(): Promise<UserSettings>
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings>
   resetSettingsToDefaults(): Promise<UserSettings>

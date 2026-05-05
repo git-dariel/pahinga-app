@@ -12,6 +12,7 @@ import {
   STRETCH_IPC_CHANNELS,
   SUMMARY_IPC_CHANNELS,
   TRAY_IPC_CHANNELS,
+  WINDOW_IPC_CHANNELS,
   WATER_REMINDER_IPC_CHANNELS
 } from '../../shared/ipc'
 import type {
@@ -213,6 +214,9 @@ export function registerPahingaIpc(
 
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.GET)
   ipcMain.removeHandler(APP_IPC_CHANNELS.GET_INFO)
+  ipcMain.removeHandler(WINDOW_IPC_CHANNELS.MINIMIZE)
+  ipcMain.removeHandler(WINDOW_IPC_CHANNELS.MAXIMIZE)
+  ipcMain.removeHandler(WINDOW_IPC_CHANNELS.CLOSE)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.UPDATE)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE)
   ipcMain.removeHandler(DASHBOARD_IPC_CHANNELS.GET_TODAY)
@@ -261,6 +265,27 @@ export function registerPahingaIpc(
 
   handleIpc(APP_IPC_CHANNELS.GET_INFO, () => {
     return getAppInfo()
+  })
+
+  handleIpc(WINDOW_IPC_CHANNELS.MINIMIZE, () => {
+    const win = getMainWindow()
+    if (win && !win.isDestroyed()) win.minimize()
+    return true
+  })
+
+  handleIpc(WINDOW_IPC_CHANNELS.MAXIMIZE, () => {
+    const win = getMainWindow()
+    if (win && !win.isDestroyed()) {
+      if (win.isMaximized()) win.unmaximize()
+      else win.maximize()
+    }
+    return true
+  })
+
+  handleIpc(WINDOW_IPC_CHANNELS.CLOSE, () => {
+    const win = getMainWindow()
+    if (win && !win.isDestroyed()) win.close()
+    return true
   })
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.GET, () => {

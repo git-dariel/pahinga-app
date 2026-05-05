@@ -7,14 +7,14 @@
 @theme {
   --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  --color-background: #f8fafc;
+  --color-background: #f4f1eb;
   --color-surface: #ffffff;
-  --color-primary: #2563eb;
-  --color-primary-soft: #dbeafe;
-  --color-foreground: #0f172a;
-  --color-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-success: #16a34a;
+  --color-primary: #3f7656;
+  --color-primary-soft: #e6eee8;
+  --color-foreground: #1a2b22;
+  --color-muted: #5e6f63;
+  --color-border: #ddd8cd;
+  --color-success: #3f7656;
   --color-warning: #f59e0b;
   --color-danger: #dc2626;
 }
@@ -32,6 +32,7 @@ body,
 body {
   color: var(--color-foreground);
   text-rendering: optimizeLegibility;
+  overflow: hidden;
 }
 
 html.pahinga-overlay,
@@ -50,4 +51,28 @@ select {
 ::selection {
   background: var(--color-primary-soft);
   color: var(--color-foreground);
+}
+
+.app-drag {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@keyframes overlay-neko-intro-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(36%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.overlay-neko-intro-slide {
+  animation: overlay-neko-intro-slide-in 980ms ease-out both;
+  will-change: transform, opacity;
 }

@@ -13,6 +13,7 @@ import {
   STRETCH_IPC_CHANNELS,
   SUMMARY_IPC_CHANNELS,
   TRAY_IPC_CHANNELS,
+  WINDOW_IPC_CHANNELS,
   WATER_REMINDER_EVENT,
   WATER_REMINDER_IPC_CHANNELS
 } from '../shared/ipc'
@@ -39,6 +40,15 @@ const pahinga = {
   },
   getAppInfo(): Promise<AppInfo> {
     return ipcRenderer.invoke(APP_IPC_CHANNELS.GET_INFO)
+  },
+  windowMinimize(): Promise<boolean> {
+    return ipcRenderer.invoke(WINDOW_IPC_CHANNELS.MINIMIZE)
+  },
+  windowMaximize(): Promise<boolean> {
+    return ipcRenderer.invoke(WINDOW_IPC_CHANNELS.MAXIMIZE)
+  },
+  windowClose(): Promise<boolean> {
+    return ipcRenderer.invoke(WINDOW_IPC_CHANNELS.CLOSE)
   },
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.UPDATE, patch)

@@ -1,69 +1,79 @@
 import { useEffect, useState } from 'react'
 import {
   Bell,
+  CheckCircle,
   Coffee,
   Droplets,
-  Timer,
-  TrendingUp,
   Pause,
   Play,
   Square,
-  Sparkles
+  Sparkles,
+  TrendingUp
 } from 'lucide-react'
 import type { TrayStatus } from '@shared/types'
+import {
+  DesignButton,
+  DesignCard,
+  Pill,
+  RingTimer,
+  ScreenHeader,
+  SmallIconBox
+} from '@renderer/components/design'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
-import { Button, Card, EmptyState, PageShell } from '@renderer/components/ui'
 import { formatClock } from '@renderer/lib/formatClock'
 import { useDashboard } from '@renderer/hooks/useDashboard'
 import { pahingaApi } from '@renderer/services/pahingaApi'
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  hint
-}: {
-  icon: typeof Timer
-  label: string
-  value: string
-  hint: string
-}): React.JSX.Element {
-  return (
-    <Card className="flex min-h-30 flex-col gap-1 p-5">
-      <div className="flex items-center gap-2 text-muted">
-        <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden />
-        <p className="text-xs font-medium uppercase tracking-wide">{label}</p>
-      </div>
-      <p className="text-2xl font-bold text-foreground mt-1 tabular-nums">{value}</p>
-      <p className="text-xs text-muted mt-auto leading-snug">{hint}</p>
-    </Card>
-  )
-}
 
 function TrayStatusBadge({ trayStatus }: { trayStatus: TrayStatus | null }): React.JSX.Element {
   const active = trayStatus?.active ?? false
 
   return (
-    <div
-      className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted shadow-sm"
-      title={
-        trayStatus?.closeToTrayEnabled
-          ? 'Reminders keep running when the app is closed to tray.'
-          : 'Tray controls are available from the system menu.'
-      }
-    >
-      <span
-        className={`h-2 w-2 rounded-full ${active ? 'bg-success' : 'bg-warning'}`}
-        aria-hidden
-      />
+    <Pill>
+      <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-primary' : 'bg-warning'}`} />
       <Bell className="h-3.5 w-3.5" aria-hidden />
       <span>Tray {active ? 'active' : 'starting'}</span>
-    </div>
+    </Pill>
+  )
+}
+
+function MetricCard({
+  icon,
+  label,
+  value,
+  unit,
+  hint,
+  progress
+}: {
+  icon: typeof Coffee
+  label: string
+  value: string
+  unit?: string
+  hint: string
+  progress: number
+}): React.JSX.Element {
+  return (
+    <DesignCard className="p-4">
+      <div className="mb-4 flex items-center gap-3">
+        <SmallIconBox icon={icon} tone="beige" />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">{label}</p>
+      </div>
+      <div className="flex items-end gap-2">
+        <p className="text-[30px] font-bold leading-none text-foreground tabular-nums">{value}</p>
+        {unit ? <p className="pb-1 text-sm font-semibold text-muted">{unit}</p> : null}
+      </div>
+      <p className="mt-2 text-xs text-muted">{hint}</p>
+      <div className="mt-3 h-0.5 rounded-full bg-[#e7e0d5]">
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${Math.max(8, Math.min(100, progress))}%` }}
+        />
+      </div>
+    </DesignCard>
   )
 }
 
 export default function Dashboard(): React.ReactNode {
-  const { data, status, error, refresh, startSession, pauseSession, resumeSession, stopSession } =
+  const { data, status, error, startSession, pauseSession, resumeSession, stopSession } =
     useDashboard()
   const { showToast } = useToast()
   const [trayStatus, setTrayStatus] = useState<TrayStatus | null>(null)
@@ -82,10 +92,6 @@ export default function Dashboard(): React.ReactNode {
       mounted = false
     }
   }, [])
-
-  const idle = data?.sessionPhase === 'idle'
-  const focusing = data?.sessionPhase === 'focusing'
-  const paused = data?.sessionPhase === 'paused'
 
   async function onStart(): Promise<void> {
     try {
@@ -129,181 +135,123 @@ export default function Dashboard(): React.ReactNode {
     }
   }
 
-  const showEmptyStats =
-    data &&
-    idle &&
-    data.summary.totalFocusMinutes === 0 &&
-    data.summary.focusSessionCount === 0 &&
-    data.summary.breaksTaken === 0
-
   if (status === 'loading' && !data) {
-    return (
-      <div className="p-8">
-        <div className="h-8 w-48 rounded-lg bg-border animate-pulse mb-2" />
-        <div className="h-4 w-72 rounded bg-border/80 animate-pulse mb-8" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-5xl">
-          <div className="lg:col-span-2 h-56 rounded-xl bg-border animate-pulse" />
-          <div className="space-y-4">
-            <div className="h-28 rounded-xl bg-border animate-pulse" />
-            <div className="h-28 rounded-xl bg-border animate-pulse" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (status === 'error' && !data) {
-    return (
-      <div className="p-8 max-w-lg">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="mt-4 text-sm text-danger">{error?.message ?? 'Failed to load dashboard.'}</p>
-        <Button type="button" onClick={() => void refresh()} className="mt-4">
-          Try again
-        </Button>
-      </div>
-    )
+    return <div className="mx-auto max-w-[1080px] px-8 py-10 text-sm text-muted">Loading...</div>
   }
 
   if (!data) return null
 
-  const focusLabel = paused ? 'Paused' : focusing ? 'Focusing' : 'Ready to focus'
-  const focusHint = idle
-    ? `Default block: ${data.settings.focusDuration} min - Open the timer for more options.`
-    : paused
-      ? 'Timer is paused. Resume when you are ready.'
-      : 'Stay with your task until this block ends.'
-
-  const breakLine =
-    idle || data.nextBreakInMinutes === null
-      ? 'Start a focus session to see your next break.'
-      : `Next break in ${data.nextBreakInMinutes} minute${data.nextBreakInMinutes === 1 ? '' : 's'}`
-
-  const waterLine =
-    idle || data.nextWaterInMinutes === null
-      ? 'Start a focus session for water reminders.'
-      : `Next water reminder in ${data.nextWaterInMinutes} minute${data.nextWaterInMinutes === 1 ? '' : 's'}`
-
-  const workMinutesDisplay = data.summary.totalFocusMinutes
-  const breaksDisplay = data.summary.breaksTaken
+  const idle = data.sessionPhase === 'idle'
+  const focusing = data.sessionPhase === 'focusing'
+  const paused = data.sessionPhase === 'paused'
+  const targetSeconds = (data.activeSession?.targetMinutes ?? data.settings.focusDuration) * 60
+  const elapsedProgress = idle ? 0 : 1 - data.focusRemainingSeconds / Math.max(1, targetSeconds)
+  const breakValue = idle ? '-' : String(data.nextBreakInMinutes ?? 0)
+  const waterValue = idle ? '-' : String(data.nextWaterInMinutes ?? 0)
 
   return (
-    <PageShell
-      title="Dashboard"
-      description="A calm view of your session, reminders, and today's progress."
-      action={<TrayStatusBadge trayStatus={trayStatus} />}
-      className="max-w-5xl"
-    >
+    <div className="mx-auto max-w-[1080px] px-8 py-10">
+      <ScreenHeader
+        title="Dashboard"
+        description="A calm view of your session, reminders, and today's progress."
+        action={<TrayStatusBadge trayStatus={trayStatus} />}
+      />
+
       {error ? (
-        <div className="mb-4 rounded-lg border border-warning/40 bg-surface px-4 py-3 text-sm text-warning">
+        <div className="mb-4 rounded-md border border-warning/40 bg-surface px-4 py-3 text-sm text-warning">
           {error.message}
         </div>
       ) : null}
 
-      <div className="space-y-4">
-        <Card className="flex min-h-56 flex-col items-center rounded-2xl p-6 text-center">
-          <div>
-            <p className="text-xs font-medium text-muted uppercase tracking-wide">Current focus</p>
-            <p className="text-lg font-semibold text-foreground mt-1">{focusLabel}</p>
-            <p className="text-sm text-muted mt-1 max-w-md">{focusHint}</p>
-          </div>
-
-          <div className="mt-6 flex flex-col items-center justify-center">
-            <p
-              className="text-5xl font-bold text-foreground tabular-nums tracking-tight"
-              aria-live="polite"
-            >
-              {idle ? '-' : formatClock(data.focusRemainingSeconds)}
-            </p>
-            {!idle ? (
-              <p className="mt-2 text-sm text-muted">
-                of {formatClock(data.settings.focusDuration * 60)} planned
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button type="button" variant="secondary" onClick={() => void onTestBreakOverlay()}>
-              <Sparkles className="h-4 w-4" aria-hidden />
-              Test Break Overlay
-            </Button>
-
-            {idle ? (
-              <Button type="button" onClick={() => void onStart()}>
-                <Play className="h-4 w-4" aria-hidden />
-                Start Focus
-              </Button>
-            ) : null}
-
-            {focusing ? (
-              <Button type="button" variant="secondary" onClick={() => void onPause()}>
-                <Pause className="h-4 w-4" aria-hidden />
-                Pause
-              </Button>
-            ) : null}
-
-            {paused ? (
-              <Button type="button" onClick={() => void onResume()}>
-                <Play className="h-4 w-4" aria-hidden />
-                Resume
-              </Button>
-            ) : null}
-
-            {!idle ? (
-              <Button type="button" variant="secondary" onClick={() => void onStop()}>
-                <Square className="h-4 w-4" aria-hidden />
-                Stop Session
-              </Button>
-            ) : null}
-          </div>
-        </Card>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StatCard
-            icon={Coffee}
-            label="Next break"
-            value={idle ? '-' : `${data.nextBreakInMinutes ?? 0} min`}
-            hint={breakLine}
-          />
-          <StatCard
-            icon={Droplets}
-            label="Next water"
-            value={idle ? '-' : `${data.nextWaterInMinutes ?? 0} min`}
-            hint={waterLine}
-          />
+      <DesignCard className="relative mb-5 min-h-[405px] p-8">
+        <div className="absolute left-8 top-8 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Current focus
         </div>
-      </div>
+        <div className="absolute right-9 top-8 flex items-center gap-2 text-xs font-semibold text-foreground">
+          <span className={`h-2 w-2 rounded-full ${focusing ? 'bg-primary' : 'bg-muted/40'}`} />
+          {paused ? 'Paused' : focusing ? 'Focusing' : 'Ready'}
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-        <StatCard
+        <div className="flex h-full min-h-[335px] flex-col items-center justify-center pt-8">
+          <RingTimer
+            value={idle ? '-' : formatClock(data.focusRemainingSeconds)}
+            subtitle={!idle ? `of ${formatClock(targetSeconds)} planned` : undefined}
+            progress={elapsedProgress}
+          />
+          <p className="mt-8 text-sm text-muted">
+            {paused
+              ? 'Timer is paused. Resume when you are ready.'
+              : focusing
+                ? 'Stay with your task until this block ends.'
+                : `Default block: ${data.settings.focusDuration} min.`}
+          </p>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <DesignButton type="button" onClick={() => void onTestBreakOverlay()}>
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              Test break overlay
+            </DesignButton>
+            {idle ? (
+              <DesignButton type="button" variant="primary" onClick={() => void onStart()}>
+                <Play className="h-3.5 w-3.5" aria-hidden />
+                Start focus
+              </DesignButton>
+            ) : null}
+            {focusing ? (
+              <DesignButton type="button" onClick={() => void onPause()}>
+                <Pause className="h-3.5 w-3.5" aria-hidden />
+                Pause
+              </DesignButton>
+            ) : null}
+            {paused ? (
+              <DesignButton type="button" variant="primary" onClick={() => void onResume()}>
+                <Play className="h-3.5 w-3.5" aria-hidden />
+                Resume
+              </DesignButton>
+            ) : null}
+            {!idle ? (
+              <DesignButton type="button" onClick={() => void onStop()}>
+                <Square className="h-3.5 w-3.5" aria-hidden />
+                Stop session
+              </DesignButton>
+            ) : null}
+          </div>
+        </div>
+      </DesignCard>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+        <MetricCard
+          icon={Coffee}
+          label="Next break"
+          value={breakValue}
+          unit={idle ? undefined : 'min'}
+          hint={idle ? 'Start a focus session' : `Next break in ${data.nextBreakInMinutes} minutes`}
+          progress={idle ? 0 : 20}
+        />
+        <MetricCard
+          icon={Droplets}
+          label="Next water"
+          value={waterValue}
+          unit={idle ? undefined : 'min'}
+          hint={idle ? 'Start a focus session' : 'Hydration reminder soon'}
+          progress={idle ? 0 : 55}
+        />
+        <MetricCard
           icon={TrendingUp}
-          label="Today's work time"
-          value={workMinutesDisplay === 0 ? '0 min' : `${workMinutesDisplay} min`}
-          hint={
-            data.summary.focusSessionCount === 0
-              ? 'Completed focus blocks today.'
-              : `${data.summary.focusSessionCount} focus session${data.summary.focusSessionCount === 1 ? '' : 's'} completed.`
-          }
+          label="Today's work"
+          value={String(data.summary.totalFocusMinutes)}
+          unit="min"
+          hint={`${data.summary.focusSessionCount} sessions completed`}
+          progress={62}
         />
-        <StatCard
-          icon={Timer}
+        <MetricCard
+          icon={CheckCircle}
           label="Breaks taken"
-          value={`${breaksDisplay}`}
-          hint={
-            breaksDisplay === 0
-              ? 'Break reminders you complete show up here.'
-              : 'Great rhythm - keep resting between deep work.'
-          }
+          value={String(data.summary.breaksTaken)}
+          hint={`${data.summary.breaksSkipped} skipped today`}
+          progress={42}
         />
       </div>
-
-      {showEmptyStats ? (
-        <EmptyState
-          className="mt-8"
-          icon={<Sparkles className="h-5 w-5 text-primary" aria-hidden />}
-          title="Your day is a fresh start"
-          description="When you're ready, start a short focus block. Your time, breaks, and water nudges will show up on this dashboard so you can see progress at a glance."
-        />
-      ) : null}
-    </PageShell>
+    </div>
   )
 }

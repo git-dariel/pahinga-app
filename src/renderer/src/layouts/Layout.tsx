@@ -1,10 +1,25 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, Timer, Activity, BarChart2, Settings } from 'lucide-react'
-import type { AppInfo } from '@shared/types'
-import type { BreakReminderTriggerPayload, WaterReminderTriggerPayload } from '@shared/types'
+import {
+  Activity,
+  BarChart2,
+  Droplet,
+  Eye,
+  LayoutDashboard,
+  Maximize2,
+  Minus,
+  Settings,
+  Timer,
+  X
+} from 'lucide-react'
+import type {
+  AppInfo,
+  BreakReminderTriggerPayload,
+  WaterReminderTriggerPayload
+} from '@shared/types'
 import { BreakReminderModal } from '@renderer/components/BreakReminderModal'
 import { WaterReminderModal } from '@renderer/components/WaterReminderModal'
+import { cn } from '@renderer/lib/cn'
 import { pahingaApi } from '@renderer/services/pahingaApi'
 
 const navItems = [
@@ -14,6 +29,41 @@ const navItems = [
   { to: '/summary', label: 'Daily Summary', icon: BarChart2 },
   { to: '/settings', label: 'Settings', icon: Settings }
 ]
+
+function AppTitleBar(): React.JSX.Element {
+  return (
+    <div className="app-drag flex h-9 shrink-0 items-center justify-between bg-[#13241b] px-3 text-[#dfe8df]">
+      <div className="flex items-center gap-3">
+        <div className="flex gap-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+          <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+          <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+        </div>
+        <p className="text-xs font-semibold text-white/70">Pahinga</p>
+      </div>
+      <div className="app-no-drag flex items-center gap-5 text-white/70">
+        <Eye className="h-3.5 w-3.5" aria-hidden />
+        <button
+          type="button"
+          onClick={() => void pahingaApi.windowMinimize()}
+          aria-label="Minimize"
+        >
+          <Minus className="h-3.5 w-3.5" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => void pahingaApi.windowMaximize()}
+          aria-label="Maximize"
+        >
+          <Maximize2 className="h-3.5 w-3.5" aria-hidden />
+        </button>
+        <button type="button" onClick={() => void pahingaApi.windowClose()} aria-label="Close">
+          <X className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function Layout(): React.JSX.Element {
   const [breakReminder, setBreakReminder] = useState<BreakReminderTriggerPayload | null>(null)
@@ -44,40 +94,50 @@ export default function Layout(): React.JSX.Element {
   }, [])
 
   return (
-    <div className="flex h-screen bg-background">
-      <aside className="w-60 flex flex-col bg-surface border-r border-border shrink-0">
-        <div className="px-6 py-5 border-b border-border">
-          <h1 className="text-xl font-bold text-foreground tracking-tight">Pahinga</h1>
-          <p className="text-xs text-muted mt-0.5">Work well. Rest well.</p>
-        </div>
+    <div className="flex h-screen flex-col bg-background">
+      <AppTitleBar />
+      <div className="flex min-h-0 flex-1">
+        <aside className="relative flex w-16 shrink-0 flex-col items-center border-r border-border/70 bg-[#fbfaf6] py-5">
+          <div className="mb-7 grid h-9 w-9 place-items-center rounded-lg bg-primary text-white">
+            <Droplet className="h-5 w-5 fill-white/90" aria-hidden />
+          </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-primary-soft text-primary'
-                    : 'text-muted hover:text-foreground hover:bg-background'
-                }`
-              }
-            >
-              <Icon size={18} />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+          <nav className="flex flex-1 flex-col items-center gap-3">
+            {navItems.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                aria-label={label}
+                title={label}
+                className={({ isActive }) =>
+                  cn(
+                    'relative grid h-10 w-10 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary',
+                    isActive && 'bg-primary-soft text-primary'
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive ? (
+                      <span className="absolute -left-3 h-5 w-1 rounded-r-full bg-primary" />
+                    ) : null}
+                    <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden />
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
 
-        <div className="px-6 py-4 border-t border-border">
-          <p className="text-xs text-muted">v{appInfo?.version ?? '0.1.0'}</p>
-        </div>
-      </aside>
+          <div className="mt-auto flex items-center gap-2 rounded-full bg-primary-soft px-3 py-2 text-primary">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <span className="sr-only">v{appInfo?.version ?? '0.1.0'}</span>
+          </div>
+        </aside>
 
-      <main className="flex-1 overflow-auto">
-        <Outlet />
-      </main>
+        <main className="min-w-0 flex-1 overflow-auto bg-background">
+          <Outlet />
+        </main>
+      </div>
 
       <BreakReminderModal payload={breakReminder} onDismiss={() => setBreakReminder(null)} />
       <WaterReminderModal payload={waterReminder} onDismiss={() => setWaterReminder(null)} />

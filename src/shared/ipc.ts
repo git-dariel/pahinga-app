@@ -94,4 +94,10 @@ export const APP_IPC_CHANNELS = {
   GET_INFO: 'app:getInfo'
 } as const
 
+export const WINDOW_IPC_CHANNELS = {
+  MINIMIZE: 'window:minimize',
+  MAXIMIZE: 'window:maximize',
+  CLOSE: 'window:close'
+} as const
+
 export type UserSettingsUpdatePayload = UserSettingsUpdate
