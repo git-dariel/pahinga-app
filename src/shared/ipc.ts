@@ -78,4 +78,15 @@ export const SUMMARY_IPC_CHANNELS = {
   GET_LAST_SEVEN_DAYS: 'summary:getLastSevenDays'
 } as const
 
+/** Phase 11 desktop notification status and reminder previews. */
+export const NOTIFICATION_IPC_CHANNELS = {
+  GET_STATUS: 'notification:getStatus',
+  PREVIEW: 'notification:preview'
+} as const
+
+/** Phase 11 tray status for dashboard visibility. */
+export const TRAY_IPC_CHANNELS = {
+  GET_STATUS: 'tray:getStatus'
+} as const
+
 export type UserSettingsUpdatePayload = UserSettingsUpdate

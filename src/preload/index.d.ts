@@ -4,9 +4,12 @@ import type {
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
+  DesktopNotificationStatus,
+  NotificationPreviewKind,
   StretchLog,
   StretchType,
   SummaryResponse,
+  TrayStatus,
   UserSettings,
   UserSettingsUpdate,
   WaterReminderTriggerPayload
@@ -18,6 +21,9 @@ export interface PahingaPreloadApi {
   resetSettingsToDefaults(): Promise<UserSettings>
   pickOverlayMedia(): Promise<string | null>
   isOnboardingComplete(): Promise<boolean>
+  getNotificationStatus(): Promise<DesktopNotificationStatus>
+  previewNotification(kind: NotificationPreviewKind): Promise<boolean>
+  getTrayStatus(): Promise<TrayStatus>
   getDashboardToday(): Promise<DashboardToday>
   sessionStart(payload?: { plannedMinutes?: number }): Promise<DashboardToday>
   sessionPause(): Promise<DashboardToday>

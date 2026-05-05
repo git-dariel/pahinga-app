@@ -1,5 +1,17 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Coffee, Droplets, Timer, TrendingUp, Pause, Play, Square, Sparkles } from 'lucide-react'
+import {
+  Bell,
+  Coffee,
+  Droplets,
+  Timer,
+  TrendingUp,
+  Pause,
+  Play,
+  Square,
+  Sparkles
+} from 'lucide-react'
+import type { TrayStatus } from '@shared/types'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
 import { formatClock } from '@renderer/lib/formatClock'
 import { useDashboard } from '@renderer/hooks/useDashboard'
@@ -32,6 +44,22 @@ export default function Dashboard(): React.ReactNode {
   const { data, status, error, refresh, startSession, pauseSession, resumeSession, stopSession } =
     useDashboard()
   const { showToast } = useToast()
+  const [trayStatus, setTrayStatus] = useState<TrayStatus | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    void pahingaApi
+      .getTrayStatus()
+      .then((next) => {
+        if (mounted) setTrayStatus(next)
+      })
+      .catch(() => {
+        if (mounted) setTrayStatus(null)
+      })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const idle = data?.sessionPhase === 'idle'
   const focusing = data?.sessionPhase === 'focusing'
@@ -159,7 +187,9 @@ export default function Dashboard(): React.ReactNode {
         <div className="lg:col-span-2 bg-surface border border-border rounded-2xl p-6 flex flex-col min-h-56">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-medium text-muted uppercase tracking-wide">Current focus</p>
+              <p className="text-xs font-medium text-muted uppercase tracking-wide">
+                Current focus
+              </p>
               <p className="text-lg font-semibold text-foreground mt-1">{focusLabel}</p>
               <p className="text-sm text-muted mt-1 max-w-md">{focusHint}</p>
             </div>
@@ -253,6 +283,16 @@ export default function Dashboard(): React.ReactNode {
             label="Next water"
             value={idle ? '—' : `${data.nextWaterInMinutes ?? 0} min`}
             hint={waterLine}
+          />
+          <StatCard
+            icon={Bell}
+            label="Tray status"
+            value={trayStatus?.active ? 'Active' : 'Starting'}
+            hint={
+              trayStatus?.closeToTrayEnabled
+                ? 'Reminders keep running when the app is closed to tray.'
+                : 'Tray controls are available from the system menu.'
+            }
           />
         </div>
       </div>

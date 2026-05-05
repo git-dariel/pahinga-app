@@ -4,12 +4,14 @@ import {
   BREAK_OVERLAY_EVENT,
   BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
+  NOTIFICATION_IPC_CHANNELS,
   OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS,
   STRETCH_IPC_CHANNELS,
   SUMMARY_IPC_CHANNELS,
+  TRAY_IPC_CHANNELS,
   WATER_REMINDER_EVENT,
   WATER_REMINDER_IPC_CHANNELS
 } from '../shared/ipc'
@@ -18,9 +20,12 @@ import type {
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
+  DesktopNotificationStatus,
+  NotificationPreviewKind,
   StretchLog,
   StretchType,
   SummaryResponse,
+  TrayStatus,
   UserSettings,
   UserSettingsUpdate,
   WaterReminderTriggerPayload
@@ -43,6 +48,15 @@ const pahinga = {
   },
   isOnboardingComplete(): Promise<boolean> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE)
+  },
+  getNotificationStatus(): Promise<DesktopNotificationStatus> {
+    return ipcRenderer.invoke(NOTIFICATION_IPC_CHANNELS.GET_STATUS)
+  },
+  previewNotification(kind: NotificationPreviewKind): Promise<boolean> {
+    return ipcRenderer.invoke(NOTIFICATION_IPC_CHANNELS.PREVIEW, kind)
+  },
+  getTrayStatus(): Promise<TrayStatus> {
+    return ipcRenderer.invoke(TRAY_IPC_CHANNELS.GET_STATUS)
   },
   getDashboardToday(): Promise<DashboardToday> {
     return ipcRenderer.invoke(DASHBOARD_IPC_CHANNELS.GET_TODAY)
@@ -79,7 +93,10 @@ const pahinga = {
   },
 
   onBreakReminderTrigger(callback: (payload: BreakReminderTriggerPayload) => void): () => void {
-    const handler = (_event: Electron.IpcRendererEvent, payload: BreakReminderTriggerPayload): void => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      payload: BreakReminderTriggerPayload
+    ): void => {
       callback(payload)
     }
     ipcRenderer.on(BREAK_REMINDER_EVENT, handler)
@@ -101,7 +118,10 @@ const pahinga = {
   },
 
   onWaterReminderTrigger(callback: (payload: WaterReminderTriggerPayload) => void): () => void {
-    const handler = (_event: Electron.IpcRendererEvent, payload: WaterReminderTriggerPayload): void => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      payload: WaterReminderTriggerPayload
+    ): void => {
       callback(payload)
     }
     ipcRenderer.on(WATER_REMINDER_EVENT, handler)
@@ -155,7 +175,10 @@ const pahinga = {
   },
 
   onOverlayBreakTriggered(callback: (payload: BreakOverlayTriggerPayload) => void): () => void {
-    const handler = (_event: Electron.IpcRendererEvent, payload: BreakOverlayTriggerPayload): void => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      payload: BreakOverlayTriggerPayload
+    ): void => {
       callback(payload)
     }
     ipcRenderer.on(BREAK_OVERLAY_EVENT, handler)

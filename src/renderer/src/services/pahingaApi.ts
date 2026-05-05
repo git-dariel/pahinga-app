@@ -3,9 +3,12 @@ import type {
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
   DashboardToday,
+  DesktopNotificationStatus,
+  NotificationPreviewKind,
   StretchLog,
   StretchType,
   SummaryResponse,
+  TrayStatus,
   UserSettings,
   UserSettingsUpdate,
   WaterReminderTriggerPayload
@@ -39,6 +42,18 @@ export const pahingaApi = {
     return getPahinga().isOnboardingComplete()
   },
 
+  getNotificationStatus(): Promise<DesktopNotificationStatus> {
+    return getPahinga().getNotificationStatus()
+  },
+
+  previewNotification(kind: NotificationPreviewKind): Promise<boolean> {
+    return getPahinga().previewNotification(kind)
+  },
+
+  getTrayStatus(): Promise<TrayStatus> {
+    return getPahinga().getTrayStatus()
+  },
+
   getDashboardToday(): Promise<DashboardToday> {
     return getPahinga().getDashboardToday()
   },
@@ -62,7 +77,9 @@ export const pahingaApi = {
   sessionCancel(): Promise<DashboardToday> {
     const pahinga = getPahinga() as {
       sessionCancel?: () => Promise<DashboardToday>
-      sessionEnd?: ((completed: boolean) => Promise<DashboardToday>) | (() => Promise<DashboardToday>)
+      sessionEnd?:
+        | ((completed: boolean) => Promise<DashboardToday>)
+        | (() => Promise<DashboardToday>)
     }
     if (typeof pahinga.sessionCancel === 'function') {
       return pahinga.sessionCancel()

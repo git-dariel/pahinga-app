@@ -1,20 +1,23 @@
-import { app, BrowserWindow, dialog, ipcMain, Notification, type OpenDialogOptions } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, type OpenDialogOptions } from 'electron'
 import type Database from 'better-sqlite3'
 import {
   BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
+  NOTIFICATION_IPC_CHANNELS,
   OVERLAY_IPC_CHANNELS,
   REMINDER_IPC_CHANNELS,
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS,
   STRETCH_IPC_CHANNELS,
   SUMMARY_IPC_CHANNELS,
+  TRAY_IPC_CHANNELS,
   WATER_REMINDER_IPC_CHANNELS
 } from '../../shared/ipc'
 import type {
   BreakOverlayTriggerPayload,
   BreakOverlayOpenReason,
   BreakReminderTriggerPayload,
+  NotificationPreviewKind,
   StretchType
 } from '../../shared/types'
 import { createFocusSessionRepository } from '../repositories/focusSessionRepository'
@@ -36,6 +39,8 @@ import { getDefaultNekoUrls } from '../services/overlayMediaUrl'
 import { createDashboardService } from '../services/dashboardService'
 import { createFocusSessionService } from '../services/focusSessionService'
 import { createSettingsService } from '../services/settingsService'
+import { createDesktopNotificationService } from '../services/desktopNotificationService'
+import { createTrayService } from '../services/trayService'
 import { nowIso } from '../database/timestamps'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -73,9 +78,15 @@ function sanitizeOverlayOpenReason(value: unknown): BreakOverlayOpenReason {
   return 'focus_complete'
 }
 
+function sanitizeNotificationPreviewKind(value: unknown): NotificationPreviewKind {
+  if (value === 'break' || value === 'water') return value
+  throw new Error('Invalid notification preview type.')
+}
+
 export function registerPahingaIpc(
   db: Database.Database,
-  getMainWindow: () => BrowserWindow | null
+  getMainWindow: () => BrowserWindow | null,
+  iconPath: string
 ): void {
   const settingsService = createSettingsService(db)
   const focusRepo = createFocusSessionRepository(db)
@@ -88,6 +99,10 @@ export function registerPahingaIpc(
   const stretchService = createStretchService(stretchRepo)
   const summaryService = createSummaryService(focusRepo, reminderRepo, stretchRepo)
   const breakOverlayService = createBreakOverlayService({ getMainWindow })
+  const notificationService = createDesktopNotificationService({
+    getMainWindow,
+    getSettings: () => settingsService.get()
+  })
 
   // Sync startup login item with the stored preference on every app init.
   try {
@@ -118,25 +133,24 @@ export function registerPahingaIpc(
       overlayMode: settings.overlayMode
     }
 
-    // Always send OS desktop notification (respects notificationsEnabled setting).
-    if (settings.notificationsEnabled && Notification.isSupported()) {
-      const n = new Notification({ title: 'Pahinga', body: BREAK_REMINDER_NOTIFICATION_BODY })
-      n.show()
+    const reminderPayload: BreakReminderTriggerPayload = {
+      reminderId: reminder.id,
+      suggestedType: fields.suggestedType,
+      durationMinutes: fields.durationMinutes,
+      instruction: fields.instruction
     }
+
+    // Always send OS desktop notification (respects notificationsEnabled setting).
+    notificationService.showBreakReminder(reminderPayload)
 
     if (settings.restLockModeEnabled && settings.overlayMode !== 'soft_reminder') {
       breakOverlayService.open(payload)
     } else {
       // Soft reminder or rest lock disabled: show the in-app modal instead.
-      const reminderPayload: BreakReminderTriggerPayload = {
-        reminderId: reminder.id,
-        suggestedType: fields.suggestedType,
-        durationMinutes: fields.durationMinutes,
-        instruction: fields.instruction
-      }
       const win = getMainWindow()
       if (win && !win.isDestroyed()) {
         if (win.isMinimized()) win.restore()
+        if (!win.isVisible()) win.show()
         win.focus()
         win.webContents.send(BREAK_REMINDER_EVENT, reminderPayload)
       }
@@ -150,7 +164,8 @@ export function registerPahingaIpc(
     focusSessionService,
     settingsService,
     getMainWindow,
-    breakOverlayService
+    breakOverlayService,
+    notificationService
   })
   breakReminderScheduler.start()
 
@@ -158,7 +173,8 @@ export function registerPahingaIpc(
     reminderRepo,
     focusSessionService,
     settingsService,
-    getMainWindow
+    getMainWindow,
+    notificationService
   })
   waterReminderScheduler.start()
 
@@ -175,6 +191,22 @@ export function registerPahingaIpc(
       }
     }
   )
+
+  const trayService = createTrayService({
+    iconPath,
+    getMainWindow,
+    startFocus: () => {
+      try {
+        focusSessionService.start()
+      } catch {
+        // If a focus session is already running, the tray action simply opens the app.
+      }
+    },
+    takeBreak: () => {
+      openBreakOverlay('break_reminder')
+    }
+  })
+  trayService.create()
 
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.GET)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.UPDATE)
@@ -206,6 +238,9 @@ export function registerPahingaIpc(
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.GET_BREAK_PAYLOAD)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.PICK_OVERLAY_MEDIA)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.RESET_TO_DEFAULTS)
+  ipcMain.removeHandler(NOTIFICATION_IPC_CHANNELS.GET_STATUS)
+  ipcMain.removeHandler(NOTIFICATION_IPC_CHANNELS.PREVIEW)
+  ipcMain.removeHandler(TRAY_IPC_CHANNELS.GET_STATUS)
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.GET, () => {
     return settingsService.get()
@@ -220,6 +255,7 @@ export function registerPahingaIpc(
         // setLoginItemSettings is unsupported on some platforms — ignore silently.
       }
     }
+    trayService.refreshMenu()
     return updated
   })
 
@@ -232,7 +268,54 @@ export function registerPahingaIpc(
         // ignore
       }
     }
+    trayService.refreshMenu()
     return reset
+  })
+
+  ipcMain.handle(NOTIFICATION_IPC_CHANNELS.GET_STATUS, () => {
+    return notificationService.getStatus()
+  })
+
+  ipcMain.handle(NOTIFICATION_IPC_CHANNELS.PREVIEW, (_event, raw: unknown) => {
+    const kind = sanitizeNotificationPreviewKind(raw)
+
+    if (kind === 'break') {
+      const settings = settingsService.get()
+      const fields = breakReminderModalFields(settings)
+      return notificationService.showCustom('Pahinga', BREAK_REMINDER_NOTIFICATION_BODY, () => {
+        const reminder = reminderRepo.create({
+          type: 'break',
+          triggeredAt: nowIso(),
+          status: 'pending'
+        })
+        notificationService.openBreakReminder({
+          reminderId: reminder.id,
+          suggestedType: fields.suggestedType,
+          durationMinutes: fields.durationMinutes,
+          instruction: fields.instruction
+        })
+      })
+    }
+
+    return notificationService.showCustom(
+      'Pahinga',
+      'Drink some water. Stay hydrated while working.',
+      () => {
+        const reminder = reminderRepo.create({
+          type: 'water',
+          triggeredAt: nowIso(),
+          status: 'pending'
+        })
+        notificationService.openWaterReminder({
+          reminderId: reminder.id,
+          message: 'Time to hydrate. Your body needs water to stay focused.'
+        })
+      }
+    )
+  })
+
+  ipcMain.handle(TRAY_IPC_CHANNELS.GET_STATUS, () => {
+    return trayService.getStatus()
   })
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE, () => {
@@ -343,7 +426,11 @@ export function registerPahingaIpc(
     if (typeof stretchType !== 'string' || !validTypes.includes(stretchType as StretchType)) {
       throw new Error('Invalid stretchType.')
     }
-    if (typeof durationSeconds !== 'number' || !Number.isFinite(durationSeconds) || durationSeconds < 0) {
+    if (
+      typeof durationSeconds !== 'number' ||
+      !Number.isFinite(durationSeconds) ||
+      durationSeconds < 0
+    ) {
       throw new Error('Invalid durationSeconds.')
     }
     return stretchService.complete(stretchType as StretchType, Math.round(durationSeconds))

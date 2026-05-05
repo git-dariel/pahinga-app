@@ -6,6 +6,7 @@ import { getDatabase, closeDatabase } from './database/connection'
 import { registerPahingaIpc } from './ipc/registerPahingaIpc'
 
 let mainWindowRef: BrowserWindow | null = null
+let isQuitting = false
 
 function createWindow(): void {
   // Create the browser window.
@@ -22,6 +23,12 @@ function createWindow(): void {
   })
 
   mainWindowRef = mainWindow
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && process.platform !== 'darwin') {
+      event.preventDefault()
+      mainWindow.hide()
+    }
+  })
   mainWindow.on('closed', () => {
     if (mainWindowRef === mainWindow) mainWindowRef = null
   })
@@ -48,10 +55,10 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.pahinga.app')
 
   const db = getDatabase()
-  registerPahingaIpc(db, () => mainWindowRef)
+  registerPahingaIpc(db, () => mainWindowRef, icon)
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
@@ -64,6 +71,10 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+app.on('before-quit', () => {
+  isQuitting = true
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

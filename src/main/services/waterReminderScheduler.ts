@@ -1,10 +1,11 @@
-import { BrowserWindow, Notification } from 'electron'
+import { BrowserWindow } from 'electron'
 import { WATER_REMINDER_EVENT } from '../../shared/ipc'
 import type { WaterReminderTriggerPayload } from '../../shared/types'
 import { nowIso } from '../database/timestamps'
 import type { ReminderRepository } from '../repositories/reminderRepository'
 import type { SettingsService } from './settingsService'
 import type { FocusSessionService } from './focusSessionService'
+import type { DesktopNotificationService } from './desktopNotificationService'
 
 const TICK_MS = 12_000
 const SNOOZE_MS = 5 * 60 * 1000
@@ -17,9 +18,14 @@ type Deps = {
   focusSessionService: FocusSessionService
   settingsService: SettingsService
   getMainWindow: () => BrowserWindow | null
+  notificationService: DesktopNotificationService
 }
 
-export function createWaterReminderScheduler(deps: Deps) {
+export function createWaterReminderScheduler(deps: Deps): {
+  start(): void
+  stop(): void
+  recordSnooze(): void
+} {
   let timer: ReturnType<typeof setInterval> | null = null
   let lastBoundary = 0
   let lastSessionId: number | null = null
@@ -30,18 +36,6 @@ export function createWaterReminderScheduler(deps: Deps) {
     if (win && !win.isDestroyed()) {
       win.webContents.send(WATER_REMINDER_EVENT, payload)
     }
-  }
-
-  function showNotification(): void {
-    if (!Notification.isSupported()) return
-    const settings = deps.settingsService.get()
-    if (!settings.notificationsEnabled) return
-
-    const n = new Notification({
-      title: 'Pahinga',
-      body: WATER_REMINDER_NOTIFICATION_BODY
-    })
-    n.show()
   }
 
   function tick(): void {
@@ -79,7 +73,7 @@ export function createWaterReminderScheduler(deps: Deps) {
 
     lastBoundary = boundary
 
-    showNotification()
+    deps.notificationService.showWaterReminder(payload)
     sendToRenderer(payload)
   }
 

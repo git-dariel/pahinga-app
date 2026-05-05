@@ -402,25 +402,25 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Add UI state for notification permission status.
-- [ ] Show notification disabled warning if needed.
-- [ ] Add tray status indicator in Dashboard.
-- [ ] Add simple reminder preview in Settings.
+- [x] Add UI state for notification permission status.
+- [x] Show notification disabled warning if needed.
+- [x] Add tray status indicator in Dashboard.
+- [x] Add simple reminder preview in Settings.
 
 ## Backend TODO
 
-- [ ] Implement Electron desktop notifications.
-- [ ] Add notification click behavior.
-- [ ] Open break modal when notification is clicked.
-- [ ] Open water modal when notification is clicked.
-- [ ] Add tray icon.
-- [ ] Add tray menu:
-  - [ ] Open App
-  - [ ] Start Focus
-  - [ ] Take Break
-  - [ ] Quit
-- [ ] Keep reminders running while app is minimized.
-- [ ] Handle app close-to-tray behavior.
+- [x] Implement Electron desktop notifications.
+- [x] Add notification click behavior.
+- [x] Open break modal when notification is clicked.
+- [x] Open water modal when notification is clicked.
+- [x] Add tray icon.
+- [x] Add tray menu:
+  - [x] Open App
+  - [x] Start Focus
+  - [x] Take Break
+  - [x] Quit
+- [x] Keep reminders running while app is minimized.
+- [x] Handle app close-to-tray behavior.
 
 ---
 

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   BREAK_DURATION_OPTIONS,
   BREAK_REMINDER_OPTIONS,
   FOCUS_DURATION_OPTIONS,
   WATER_REMINDER_OPTIONS
 } from '@shared/reminderIntervals'
+import type { DesktopNotificationStatus, NotificationPreviewKind } from '@shared/types'
 import type { OverlayMode } from '@shared/types/user-settings'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
 import { useUserSettings } from '@renderer/hooks/useUserSettings'
@@ -55,6 +56,11 @@ export default function Settings(): React.JSX.Element {
   const { data, status, error, reload, save } = useUserSettings()
   const { showToast } = useToast()
   const [isSaving, setIsSaving] = useState(false)
+  const [notificationStatus, setNotificationStatus] = useState<DesktopNotificationStatus | null>(
+    null
+  )
+  const [previewingNotification, setPreviewingNotification] =
+    useState<NotificationPreviewKind | null>(null)
 
   const [focusMinutes, setFocusMinutes] = useState<number>(25)
   const [breakMinutes, setBreakMinutes] = useState<number>(5)
@@ -92,6 +98,15 @@ export default function Settings(): React.JSX.Element {
     setPendingStrictConfirm(false)
   }
 
+  const refreshNotificationStatus = useCallback(async (): Promise<void> => {
+    try {
+      setNotificationStatus(await pahingaApi.getNotificationStatus())
+    } catch {
+      setNotificationStatus(null)
+    }
+  }, [])
+
+  /* eslint-disable react-hooks/set-state-in-effect -- settings form fields are hydrated from IPC data. */
   useEffect(() => {
     if (!data) return
     setFocusMinutes(data.focusDuration)
@@ -106,6 +121,22 @@ export default function Settings(): React.JSX.Element {
     setAllowEmergencyExit(data.allowEmergencyExit)
     setAllowOverlaySnooze(data.allowOverlaySnooze)
   }, [data])
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    let mounted = true
+    void pahingaApi
+      .getNotificationStatus()
+      .then((next) => {
+        if (mounted) setNotificationStatus(next)
+      })
+      .catch(() => {
+        if (mounted) setNotificationStatus(null)
+      })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const isLoading = status === 'loading' && !data
   const loadFailed = status === 'error'
@@ -156,6 +187,7 @@ export default function Settings(): React.JSX.Element {
       setAllowEmergencyExit(defaults.allowEmergencyExit)
       setAllowOverlaySnooze(defaults.allowOverlaySnooze)
       await reload()
+      await refreshNotificationStatus()
       showToast('Settings reset to defaults.', 'success')
     } catch {
       showToast('Could not reset settings.', 'error')
@@ -181,11 +213,29 @@ export default function Settings(): React.JSX.Element {
         allowEmergencyExit,
         allowOverlaySnooze
       })
+      await refreshNotificationStatus()
       showToast('Settings saved successfully.', 'success')
     } catch {
       showToast('Could not save settings.', 'error')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handlePreviewNotification(kind: NotificationPreviewKind): Promise<void> {
+    setPreviewingNotification(kind)
+    try {
+      const shown = await pahingaApi.previewNotification(kind)
+      if (shown) {
+        showToast('Preview notification sent.', 'success')
+      } else {
+        await refreshNotificationStatus()
+        showToast('Desktop notifications are not ready.', 'error')
+      }
+    } catch {
+      showToast('Could not send preview notification.', 'error')
+    } finally {
+      setPreviewingNotification(null)
     }
   }
 
@@ -250,11 +300,13 @@ export default function Settings(): React.JSX.Element {
                 value={focusMinutes}
                 onChange={(e) => setFocusMinutes(Number(e.target.value))}
               >
-                {optionsWithValue(FOCUS_DURATION_OPTIONS, data?.focusDuration ?? focusMinutes).map((m) => (
-                  <option key={m} value={m}>
-                    {m} minutes
-                  </option>
-                ))}
+                {optionsWithValue(FOCUS_DURATION_OPTIONS, data?.focusDuration ?? focusMinutes).map(
+                  (m) => (
+                    <option key={m} value={m}>
+                      {m} minutes
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
@@ -268,11 +320,13 @@ export default function Settings(): React.JSX.Element {
                 value={breakMinutes}
                 onChange={(e) => setBreakMinutes(Number(e.target.value))}
               >
-                {optionsWithValue(BREAK_DURATION_OPTIONS, data?.breakDuration ?? breakMinutes).map((m) => (
-                  <option key={m} value={m}>
-                    {m} minutes
-                  </option>
-                ))}
+                {optionsWithValue(BREAK_DURATION_OPTIONS, data?.breakDuration ?? breakMinutes).map(
+                  (m) => (
+                    <option key={m} value={m}>
+                      {m} minutes
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
@@ -312,11 +366,13 @@ export default function Settings(): React.JSX.Element {
                 value={waterMinutes}
                 onChange={(e) => setWaterMinutes(Number(e.target.value))}
               >
-                {optionsWithValue(WATER_REMINDER_OPTIONS, data?.waterInterval ?? waterMinutes).map((m) => (
-                  <option key={m} value={m}>
-                    {m} minutes
-                  </option>
-                ))}
+                {optionsWithValue(WATER_REMINDER_OPTIONS, data?.waterInterval ?? waterMinutes).map(
+                  (m) => (
+                    <option key={m} value={m}>
+                      {m} minutes
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
@@ -325,7 +381,11 @@ export default function Settings(): React.JSX.Element {
                 <p className="text-sm font-medium text-foreground">Stretch Reminders</p>
                 <p className="text-xs text-muted">Include stretch suggestions during breaks</p>
               </div>
-              <Toggle pressed={stretchOn} onPressedChange={setStretchOn} label="Stretch reminders" />
+              <Toggle
+                pressed={stretchOn}
+                onPressedChange={setStretchOn}
+                label="Stretch reminders"
+              />
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -339,6 +399,50 @@ export default function Settings(): React.JSX.Element {
                 label="Desktop notifications"
               />
             </div>
+
+            {notificationStatus && notificationStatus.permissionStatus !== 'ready' ? (
+              <div className="rounded-lg border border-warning/40 bg-background px-4 py-3 text-sm text-warning">
+                {notificationStatus.message}
+              </div>
+            ) : null}
+
+            <div className="rounded-lg border border-border bg-background px-4 py-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Reminder Preview</p>
+                  <p className="text-xs text-muted">
+                    Send a sample notification and click it to preview the modal flow.
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted">
+                  {notificationStatus?.permissionStatus === 'ready' ? 'Ready' : 'Off'}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={
+                    previewingNotification !== null ||
+                    notificationStatus?.permissionStatus !== 'ready'
+                  }
+                  onClick={() => void handlePreviewNotification('break')}
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-surface disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {previewingNotification === 'break' ? 'Sending...' : 'Preview Break'}
+                </button>
+                <button
+                  type="button"
+                  disabled={
+                    previewingNotification !== null ||
+                    notificationStatus?.permissionStatus !== 'ready'
+                  }
+                  onClick={() => void handlePreviewNotification('water')}
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-surface disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {previewingNotification === 'water' ? 'Sending...' : 'Preview Water'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -348,7 +452,11 @@ export default function Settings(): React.JSX.Element {
               <p className="text-sm font-medium text-foreground">Start on System Startup</p>
               <p className="text-xs text-muted">Launch Pahinga when you log in</p>
             </div>
-            <Toggle pressed={startupOn} onPressedChange={setStartupOn} label="Start on system startup" />
+            <Toggle
+              pressed={startupOn}
+              onPressedChange={setStartupOn}
+              label="Start on system startup"
+            />
           </div>
         </div>
 
@@ -358,7 +466,9 @@ export default function Settings(): React.JSX.Element {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground">Enable Rest Lock Mode</p>
-                <p className="text-xs text-muted">Show an always-on-top break overlay instead of only small reminders</p>
+                <p className="text-xs text-muted">
+                  Show an always-on-top break overlay instead of only small reminders
+                </p>
               </div>
               <Toggle
                 pressed={restLockEnabled}
@@ -388,7 +498,9 @@ export default function Settings(): React.JSX.Element {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground">Allow Snooze in Overlay</p>
-                <p className="text-xs text-muted">Lets users snooze 5 minutes from the overlay screen</p>
+                <p className="text-xs text-muted">
+                  Lets users snooze 5 minutes from the overlay screen
+                </p>
               </div>
               <Toggle
                 pressed={allowOverlaySnooze}
@@ -400,7 +512,9 @@ export default function Settings(): React.JSX.Element {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground">Allow Emergency Exit</p>
-                <p className="text-xs text-muted">Keeps a safe way out available to avoid trapping users</p>
+                <p className="text-xs text-muted">
+                  Keeps a safe way out available to avoid trapping users
+                </p>
               </div>
               <Toggle
                 pressed={allowEmergencyExit}
@@ -459,7 +573,9 @@ export default function Settings(): React.JSX.Element {
             <div className="flex items-start gap-3">
               <span className="mt-0.5 text-xl">⚠️</span>
               <div>
-                <h2 className="text-base font-semibold text-foreground">Enable Strict Rest Lock?</h2>
+                <h2 className="text-base font-semibold text-foreground">
+                  Enable Strict Rest Lock?
+                </h2>
                 <p className="mt-2 text-sm text-muted leading-relaxed">
                   In this mode, the break overlay will actively resist being dismissed. It will:
                 </p>
@@ -470,7 +586,8 @@ export default function Settings(): React.JSX.Element {
                   <li>Require confirmation before Emergency Exit</li>
                 </ul>
                 <p className="mt-3 text-sm text-warning font-medium">
-                  Only enable this if you struggle to take breaks and want stronger enforcement. You can always change it back in Settings.
+                  Only enable this if you struggle to take breaks and want stronger enforcement. You
+                  can always change it back in Settings.
                 </p>
               </div>
             </div>

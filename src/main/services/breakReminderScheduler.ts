@@ -1,16 +1,13 @@
-import { BrowserWindow, Notification } from 'electron'
+import { BrowserWindow } from 'electron'
 import { BREAK_REMINDER_EVENT } from '../../shared/ipc'
 import type { BreakOverlayTriggerPayload, BreakReminderTriggerPayload } from '../../shared/types'
 import { nowIso } from '../database/timestamps'
 import type { ReminderRepository } from '../repositories/reminderRepository'
 import type { SettingsService } from './settingsService'
 import type { FocusSessionService } from './focusSessionService'
-import {
-  BREAK_OVERLAY_MESSAGE,
-  BREAK_REMINDER_NOTIFICATION_BODY,
-  breakReminderModalFields
-} from './breakReminderCopy'
+import { BREAK_OVERLAY_MESSAGE, breakReminderModalFields } from './breakReminderCopy'
 import type { BreakOverlayService } from './breakOverlayService'
+import type { DesktopNotificationService } from './desktopNotificationService'
 
 const TICK_MS = 12_000
 const SNOOZE_MS = 5 * 60 * 1000
@@ -21,42 +18,24 @@ type Deps = {
   settingsService: SettingsService
   getMainWindow: () => BrowserWindow | null
   breakOverlayService: BreakOverlayService
+  notificationService: DesktopNotificationService
 }
 
-export function createBreakReminderScheduler(deps: Deps) {
+export function createBreakReminderScheduler(deps: Deps): {
+  start(): void
+  stop(): void
+  recordSnooze(): void
+} {
   let timer: ReturnType<typeof setInterval> | null = null
   let lastBoundary = 0
   let lastSessionId: number | null = null
   let snoozeUntilMs = 0
-  let lastTriggerPayload: BreakReminderTriggerPayload | null = null
 
   function sendToRenderer(payload: BreakReminderTriggerPayload): void {
     const win = deps.getMainWindow()
     if (win && !win.isDestroyed()) {
       win.webContents.send(BREAK_REMINDER_EVENT, payload)
     }
-  }
-
-  function showNotification(): void {
-    if (!Notification.isSupported()) return
-    const settings = deps.settingsService.get()
-    if (!settings.notificationsEnabled) return
-
-    const n = new Notification({
-      title: 'Pahinga',
-      body: BREAK_REMINDER_NOTIFICATION_BODY
-    })
-    n.on('click', () => {
-      const win = deps.getMainWindow()
-      if (win && !win.isDestroyed()) {
-        if (win.isMinimized()) win.restore()
-        win.focus()
-        if (lastTriggerPayload) {
-          sendToRenderer(lastTriggerPayload)
-        }
-      }
-    })
-    n.show()
   }
 
   function tick(): void {
@@ -94,10 +73,9 @@ export function createBreakReminderScheduler(deps: Deps) {
       durationMinutes: fields.durationMinutes,
       instruction: fields.instruction
     }
-    lastTriggerPayload = payload
     lastBoundary = boundary
 
-    showNotification()
+    deps.notificationService.showBreakReminder(payload)
     if (settings.restLockModeEnabled && settings.overlayMode !== 'soft_reminder') {
       const overlayPayload: BreakOverlayTriggerPayload = {
         reminderId: reminder.id,
@@ -134,7 +112,6 @@ export function createBreakReminderScheduler(deps: Deps) {
     recordSnooze(): void {
       snoozeUntilMs = Date.now() + SNOOZE_MS
       lastBoundary = Math.max(0, lastBoundary - 1)
-      lastTriggerPayload = null
     }
   }
 }
