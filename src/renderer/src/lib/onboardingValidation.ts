@@ -30,7 +30,7 @@ export function validateOnboardingReminders(input: {
     return { ok: false, message: 'Choose a break reminder interval (25, 45, or 60 minutes).' }
   }
   if (!isValidWaterReminderMinutes(input.waterInterval)) {
-    return { ok: false, message: 'Choose a water reminder interval (60, 90, or 120 minutes).' }
+    return { ok: false, message: 'Choose a water reminder interval (20, 40, or 60 minutes).' }
   }
   return { ok: true }
 }

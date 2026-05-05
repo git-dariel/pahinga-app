@@ -7,7 +7,6 @@ import {
   Pause,
   Play,
   Square,
-  Sparkles,
   TrendingUp
 } from 'lucide-react'
 import type { TrayStatus } from '@shared/types'
@@ -126,15 +125,6 @@ export default function Dashboard(): React.ReactNode {
     }
   }
 
-  async function onTestBreakOverlay(): Promise<void> {
-    try {
-      await pahingaApi.overlayOpenBreak('break_reminder')
-      showToast('Test break overlay opened.', 'success')
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Could not open break overlay test.', 'error')
-    }
-  }
-
   if (status === 'loading' && !data) {
     return <div className="mx-auto max-w-[1080px] px-8 py-10 text-sm text-muted">Loading...</div>
   }
@@ -187,10 +177,6 @@ export default function Dashboard(): React.ReactNode {
           </p>
 
           <div className="mt-6 flex flex-wrap justify-center gap-2">
-            <DesignButton type="button" onClick={() => void onTestBreakOverlay()}>
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              Test break overlay
-            </DesignButton>
             {idle ? (
               <DesignButton type="button" variant="primary" onClick={() => void onStart()}>
                 <Play className="h-3.5 w-3.5" aria-hidden />

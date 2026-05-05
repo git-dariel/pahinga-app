@@ -3,7 +3,7 @@ export const BREAK_REMINDER_OPTIONS = [25, 45, 60] as const
 export type BreakReminderMinutes = (typeof BREAK_REMINDER_OPTIONS)[number]
 
 /** Water reminder interval options from product guide (minutes). */
-export const WATER_REMINDER_OPTIONS = [60, 90, 120] as const
+export const WATER_REMINDER_OPTIONS = [20, 40, 60] as const
 export type WaterReminderMinutes = (typeof WATER_REMINDER_OPTIONS)[number]
 
 /** Default focus session lengths used in Settings UI (minutes). */

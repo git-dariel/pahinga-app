@@ -5,8 +5,8 @@ import {
   FOCUS_DURATION_OPTIONS,
   WATER_REMINDER_OPTIONS
 } from '@shared/reminderIntervals'
-import type { DesktopNotificationStatus, NotificationPreviewKind, OverlayMode } from '@shared/types'
-import { DesignButton, DesignCard, Pill, ScreenHeader } from '@renderer/components/design'
+import type { OverlayMode } from '@shared/types'
+import { DesignButton, DesignCard, ScreenHeader } from '@renderer/components/design'
 import { Toggle } from '@renderer/components/ui'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
 import { useUserSettings } from '@renderer/hooks/useUserSettings'
@@ -114,11 +114,6 @@ export default function Settings(): React.JSX.Element {
   const [overlayMode, setOverlayMode] = useState<OverlayMode>('focused_break_overlay')
   const [allowOverlaySnooze, setAllowOverlaySnooze] = useState(true)
   const [allowEmergencyExit, setAllowEmergencyExit] = useState(true)
-  const [notificationStatus, setNotificationStatus] = useState<DesktopNotificationStatus | null>(
-    null
-  )
-  const [previewingNotification, setPreviewingNotification] =
-    useState<NotificationPreviewKind | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -135,21 +130,6 @@ export default function Settings(): React.JSX.Element {
     setAllowOverlaySnooze(data.allowOverlaySnooze)
     setAllowEmergencyExit(data.allowEmergencyExit)
   }, [data])
-
-  useEffect(() => {
-    let mounted = true
-    void pahingaApi
-      .getNotificationStatus()
-      .then((next) => {
-        if (mounted) setNotificationStatus(next)
-      })
-      .catch(() => {
-        if (mounted) setNotificationStatus(null)
-      })
-    return () => {
-      mounted = false
-    }
-  }, [])
 
   const dirty = useMemo(() => {
     if (!data) return false
@@ -197,7 +177,6 @@ export default function Settings(): React.JSX.Element {
         allowOverlaySnooze,
         allowEmergencyExit
       })
-      setNotificationStatus(await pahingaApi.getNotificationStatus())
       showToast('Settings saved successfully.', 'success')
     } catch {
       showToast('Could not save settings.', 'error')
@@ -212,27 +191,11 @@ export default function Settings(): React.JSX.Element {
     try {
       await pahingaApi.resetSettingsToDefaults()
       await reload()
-      setNotificationStatus(await pahingaApi.getNotificationStatus())
       showToast('Settings reset to defaults.', 'success')
     } catch {
       showToast('Could not reset settings.', 'error')
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  async function handlePreviewNotification(kind: NotificationPreviewKind): Promise<void> {
-    setPreviewingNotification(kind)
-    try {
-      const shown = await pahingaApi.previewNotification(kind)
-      showToast(
-        shown ? 'Preview notification sent.' : 'Desktop notifications are not ready.',
-        shown ? 'success' : 'error'
-      )
-    } catch {
-      showToast('Could not send preview notification.', 'error')
-    } finally {
-      setPreviewingNotification(null)
     }
   }
 
@@ -316,38 +279,6 @@ export default function Settings(): React.JSX.Element {
             label="Desktop notifications"
           />
         </SettingRow>
-        <div className="m-5 rounded-md border border-border bg-background/60 p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold text-foreground">Reminder preview</p>
-              <p className="mt-0.5 text-xs text-muted">Send a sample notification.</p>
-            </div>
-            <Pill className="px-3 py-1 text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              {notificationStatus?.permissionStatus === 'ready' ? 'Ready' : 'Off'}
-            </Pill>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <DesignButton
-              type="button"
-              disabled={
-                previewingNotification !== null || notificationStatus?.permissionStatus !== 'ready'
-              }
-              onClick={() => void handlePreviewNotification('break')}
-            >
-              Preview break
-            </DesignButton>
-            <DesignButton
-              type="button"
-              disabled={
-                previewingNotification !== null || notificationStatus?.permissionStatus !== 'ready'
-              }
-              onClick={() => void handlePreviewNotification('water')}
-            >
-              Preview water
-            </DesignButton>
-          </div>
-        </div>
       </SettingsSection>
 
       <SettingsSection title="App" description="Launch and background behavior.">

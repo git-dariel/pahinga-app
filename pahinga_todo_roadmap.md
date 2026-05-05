@@ -464,33 +464,33 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Test onboarding flow.
-- [ ] Test dashboard data rendering.
-- [ ] Test focus timer controls.
-- [ ] Test break modal actions.
-- [ ] Test water reminder actions.
-- [ ] Test stretch guide completion.
-- [ ] Test daily summary page.
-- [ ] Test settings form validation.
-- [ ] Test app behavior after reload.
-- [ ] Test small window layout.
-- [ ] Test basic accessibility using keyboard navigation.
+- [x] Test onboarding flow.
+- [x] Test dashboard data rendering.
+- [x] Test focus timer controls.
+- [x] Test break modal actions.
+- [x] Test water reminder actions.
+- [x] Test stretch guide completion.
+- [x] Test daily summary page.
+- [x] Test settings form validation.
+- [x] Test app behavior after reload.
+- [x] Test small window layout.
+- [x] Test basic accessibility using keyboard navigation.
 
 ## Backend TODO
 
-- [ ] Test SQLite database connection.
-- [ ] Test migration runner.
-- [ ] Test settings repository.
-- [ ] Test focus session repository.
-- [ ] Test reminder repository.
-- [ ] Test stretch log repository.
-- [ ] Test focus session service.
-- [ ] Test reminder scheduler.
-- [ ] Test summary calculation.
-- [ ] Test IPC handlers.
-- [ ] Test desktop notifications.
-- [ ] Test app behavior when minimized.
-- [ ] Test app behavior after restart.
+- [x] Test SQLite database connection.
+- [x] Test migration runner.
+- [x] Test settings repository.
+- [x] Test focus session repository.
+- [x] Test reminder repository.
+- [x] Test stretch log repository.
+- [x] Test focus session service.
+- [x] Test reminder scheduler.
+- [x] Test summary calculation.
+- [x] Test IPC handlers.
+- [x] Test desktop notifications.
+- [x] Test app behavior when minimized.
+- [x] Test app behavior after restart.
 
 ---
 
@@ -498,26 +498,26 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Finalize app icon.
-- [ ] Finalize app name.
-- [ ] Finalize empty states.
-- [ ] Finalize onboarding copy.
-- [ ] Finalize dashboard copy.
-- [ ] Finalize settings copy.
-- [ ] Review all UI screens before release.
+- [x] Finalize app icon.
+- [x] Finalize app name.
+- [x] Finalize empty states.
+- [x] Finalize onboarding copy.
+- [x] Finalize dashboard copy.
+- [x] Finalize settings copy.
+- [x] Review all UI screens before release.
 
 ## Backend TODO
 
-- [ ] Configure Electron builder.
-- [ ] Configure Windows build.
-- [ ] Configure installer settings.
-- [ ] Include SQLite database path handling for production.
-- [ ] Test production build locally.
-- [ ] Test installer.
-- [ ] Test uninstall behavior.
-- [ ] Add app auto-start support if enabled.
-- [ ] Prepare release notes.
-- [ ] Create version `v0.1.0`.
+- [x] Configure Electron builder.
+- [x] Configure Windows build.
+- [x] Configure installer settings.
+- [x] Include SQLite database path handling for production.
+- [x] Test production build locally.
+- [x] Test installer.
+- [x] Test uninstall behavior.
+- [x] Add app auto-start support if enabled.
+- [x] Prepare release notes.
+- [x] Create version `v0.1.0`.
 
 ---
 

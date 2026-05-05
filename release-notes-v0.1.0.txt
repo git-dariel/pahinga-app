@@ -1,0 +1,15 @@
+Pahinga v0.1.0
+
+Highlights
+- Added break overlay controls in Settings (rest-lock mode, overlay mode, snooze, emergency exit).
+- Added reset to defaults action in Settings.
+- Tuned break overlay visuals, font colors, and intro animation behavior.
+- Updated water reminder intervals to 20/40/60 minutes for better focus-session timing.
+
+Behavior updates
+- Removed Dashboard "Test break overlay" action.
+- Removed Settings "Reminder preview" block and preview buttons.
+
+Packaging
+- Configured Electron Builder metadata for Pahinga release artifacts.
+- Updated Windows NSIS installer settings for selectable install directory.
