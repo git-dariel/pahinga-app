@@ -335,36 +335,36 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Create Daily Summary page.
-- [ ] Add stat cards:
-  - [ ] Total focus time
-  - [ ] Focus sessions
-  - [ ] Breaks taken
-  - [ ] Breaks skipped
-  - [ ] Water reminders completed
-  - [ ] Stretch sessions completed
-- [ ] Add simple wellness insight card.
-- [ ] Add date filter:
-  - [ ] Today
-  - [ ] Yesterday
-  - [ ] Last 7 Days
-- [ ] Add empty state if no data exists.
-- [ ] Add refresh button.
-- [ ] Format durations clearly.
+- [x] Create Daily Summary page.
+- [x] Add stat cards:
+  - [x] Total focus time
+  - [x] Focus sessions
+  - [x] Breaks taken
+  - [x] Breaks skipped
+  - [x] Water reminders completed
+  - [x] Stretch sessions completed
+- [x] Add simple wellness insight card.
+- [x] Add date filter:
+  - [x] Today
+  - [x] Yesterday
+  - [x] Last 7 Days
+- [x] Add empty state if no data exists.
+- [x] Add refresh button.
+- [x] Format durations clearly.
 
 ## Backend TODO
 
-- [ ] Create summary service.
-- [ ] Create method to get summary for today.
-- [ ] Create method to get summary for yesterday.
-- [ ] Create method to get summary for last 7 days.
-- [ ] Create IPC handler: `summary:getToday`.
-- [ ] Create IPC handler: `summary:getYesterday`.
-- [ ] Create IPC handler: `summary:getLastSevenDays`.
-- [ ] Calculate completed focus sessions.
-- [ ] Calculate completed reminders.
-- [ ] Calculate skipped reminders.
-- [ ] Generate simple insight message based on user activity.
+- [x] Create summary service.
+- [x] Create method to get summary for today.
+- [x] Create method to get summary for yesterday.
+- [x] Create method to get summary for last 7 days.
+- [x] Create IPC handler: `summary:getToday`.
+- [x] Create IPC handler: `summary:getYesterday`.
+- [x] Create IPC handler: `summary:getLastSevenDays`.
+- [x] Calculate completed focus sessions.
+- [x] Calculate completed reminders.
+- [x] Calculate skipped reminders.
+- [x] Generate simple insight message based on user activity.
 
 ---
 
@@ -372,29 +372,29 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Create Settings page.
-- [ ] Add focus duration input/select.
-- [ ] Add break duration input/select.
-- [ ] Add break interval input/select.
-- [ ] Add water interval input/select.
-- [ ] Add enable stretch reminders toggle.
-- [ ] Add enable desktop notifications toggle.
-- [ ] Add start app on startup toggle.
-- [ ] Add Save Settings button.
-- [ ] Add reset to default button.
-- [ ] Show success message after saving.
-- [ ] Show validation errors if needed.
+- [x] Create Settings page.
+- [x] Add focus duration input/select.
+- [x] Add break duration input/select.
+- [x] Add break interval input/select.
+- [x] Add water interval input/select.
+- [x] Add enable stretch reminders toggle.
+- [x] Add enable desktop notifications toggle.
+- [x] Add start app on startup toggle.
+- [x] Add Save Settings button.
+- [x] Add reset to default button.
+- [x] Show success message after saving.
+- [x] Show validation errors if needed.
 
 ## Backend TODO
 
-- [ ] Extend settings service.
-- [ ] Add settings validation.
-- [ ] Create IPC handler for resetting settings.
-- [ ] Save notification preference.
-- [ ] Save startup preference.
-- [ ] Integrate startup preference with Electron app settings.
-- [ ] Apply updated reminder intervals after saving.
-- [ ] Restart reminder schedulers after settings update.
+- [x] Extend settings service.
+- [x] Add settings validation.
+- [x] Create IPC handler for resetting settings.
+- [x] Save notification preference.
+- [x] Save startup preference.
+- [x] Integrate startup preference with Electron app settings.
+- [x] Apply updated reminder intervals after saving.
+- [x] Restart reminder schedulers after settings update.
 
 ---
 

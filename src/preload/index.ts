@@ -9,6 +9,7 @@ import {
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS,
   STRETCH_IPC_CHANNELS,
+  SUMMARY_IPC_CHANNELS,
   WATER_REMINDER_EVENT,
   WATER_REMINDER_IPC_CHANNELS
 } from '../shared/ipc'
@@ -19,6 +20,7 @@ import type {
   DashboardToday,
   StretchLog,
   StretchType,
+  SummaryResponse,
   UserSettings,
   UserSettingsUpdate,
   WaterReminderTriggerPayload
@@ -30,6 +32,10 @@ const pahinga = {
   },
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.UPDATE, patch)
+  },
+
+  resetSettingsToDefaults(): Promise<UserSettings> {
+    return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.RESET_TO_DEFAULTS)
   },
 
   pickOverlayMedia(): Promise<string | null> {
@@ -110,6 +116,18 @@ const pahinga = {
 
   stretchGetToday(): Promise<StretchLog[]> {
     return ipcRenderer.invoke(STRETCH_IPC_CHANNELS.GET_TODAY)
+  },
+
+  summaryGetToday(): Promise<SummaryResponse> {
+    return ipcRenderer.invoke(SUMMARY_IPC_CHANNELS.GET_TODAY)
+  },
+
+  summaryGetYesterday(): Promise<SummaryResponse> {
+    return ipcRenderer.invoke(SUMMARY_IPC_CHANNELS.GET_YESTERDAY)
+  },
+
+  summaryGetLastSevenDays(): Promise<SummaryResponse> {
+    return ipcRenderer.invoke(SUMMARY_IPC_CHANNELS.GET_LAST_SEVEN_DAYS)
   },
 
   overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload> {

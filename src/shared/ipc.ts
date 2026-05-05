@@ -6,7 +6,9 @@ export const SETTINGS_IPC_CHANNELS = {
   UPDATE: 'settings:update',
   IS_ONBOARDING_COMPLETE: 'settings:isOnboardingComplete',
   /** Native file dialog for break overlay GIF/MP4 (Phase 6). */
-  PICK_OVERLAY_MEDIA: 'settings:pickOverlayMedia'
+  PICK_OVERLAY_MEDIA: 'settings:pickOverlayMedia',
+  /** Phase 10: reset all preferences back to their defaults. */
+  RESET_TO_DEFAULTS: 'settings:resetToDefaults'
 } as const
 
 /** Phase 3 dashboard IPC. */
@@ -67,6 +69,13 @@ export const BREAK_OVERLAY_EVENT = 'overlay:breakTriggered' as const
 export const STRETCH_IPC_CHANNELS = {
   COMPLETE: 'stretch:complete',
   GET_TODAY: 'stretch:getToday'
+} as const
+
+/** Phase 9 daily summary — renderer invokes for summary data. */
+export const SUMMARY_IPC_CHANNELS = {
+  GET_TODAY: 'summary:getToday',
+  GET_YESTERDAY: 'summary:getYesterday',
+  GET_LAST_SEVEN_DAYS: 'summary:getLastSevenDays'
 } as const
 
 export type UserSettingsUpdatePayload = UserSettingsUpdate

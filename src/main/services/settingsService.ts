@@ -29,6 +29,24 @@ export function createSettingsService(db: Database.Database) {
       }
       const current = userSettings.getOrCreate()
       return userSettings.update(current.id, sanitized)
+    },
+
+    resetToDefaults(): UserSettings {
+      const current = userSettings.getOrCreate()
+      return userSettings.update(current.id, {
+        focusDuration: 25,
+        breakDuration: 5,
+        breakInterval: 25,
+        waterInterval: 60,
+        stretchRemindersEnabled: true,
+        eyeRestRemindersEnabled: true,
+        notificationsEnabled: true,
+        startupEnabled: false,
+        restLockModeEnabled: false,
+        overlayMode: 'soft_reminder',
+        allowEmergencyExit: true,
+        allowOverlaySnooze: true
+      })
     }
   }
 }

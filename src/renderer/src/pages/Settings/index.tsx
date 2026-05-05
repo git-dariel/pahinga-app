@@ -69,6 +69,8 @@ export default function Settings(): React.JSX.Element {
   const [allowOverlaySnooze, setAllowOverlaySnooze] = useState(true)
   const [showStrictWarning, setShowStrictWarning] = useState(false)
   const [pendingStrictConfirm, setPendingStrictConfirm] = useState(false)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   function handleOverlayModeChange(value: OverlayMode): void {
     if (value === 'strict_rest_lock') {
@@ -137,6 +139,31 @@ export default function Settings(): React.JSX.Element {
     allowEmergencyExit,
     allowOverlaySnooze
   ])
+
+  async function handleReset(): Promise<void> {
+    setIsResetting(true)
+    try {
+      const defaults = await pahingaApi.resetSettingsToDefaults()
+      setFocusMinutes(defaults.focusDuration)
+      setBreakMinutes(defaults.breakDuration)
+      setBreakReminderMinutes(defaults.breakInterval)
+      setWaterMinutes(defaults.waterInterval)
+      setStretchOn(defaults.stretchRemindersEnabled)
+      setNotificationsOn(defaults.notificationsEnabled)
+      setStartupOn(defaults.startupEnabled)
+      setRestLockEnabled(defaults.restLockModeEnabled)
+      setOverlayMode(defaults.overlayMode)
+      setAllowEmergencyExit(defaults.allowEmergencyExit)
+      setAllowOverlaySnooze(defaults.allowOverlaySnooze)
+      await reload()
+      showToast('Settings reset to defaults.', 'success')
+    } catch {
+      showToast('Could not reset settings.', 'error')
+    } finally {
+      setIsResetting(false)
+      setShowResetConfirm(false)
+    }
+  }
 
   async function handleSave(): Promise<void> {
     setIsSaving(true)
@@ -385,14 +412,45 @@ export default function Settings(): React.JSX.Element {
         </div>
       </div>
 
-      <button
-        type="button"
-        disabled={isSaving || !dirty}
-        onClick={() => void handleSave()}
-        className="mt-5 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
-      >
-        {isSaving ? 'Saving…' : 'Save Settings'}
-      </button>
+      <div className="mt-5 flex items-center gap-3">
+        <button
+          type="button"
+          disabled={isSaving || !dirty}
+          onClick={() => void handleSave()}
+          className="px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        >
+          {isSaving ? 'Saving…' : 'Save Settings'}
+        </button>
+
+        {showResetConfirm ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted">Reset everything to defaults?</span>
+            <button
+              type="button"
+              disabled={isResetting}
+              onClick={() => void handleReset()}
+              className="px-3 py-1.5 bg-danger text-white text-xs font-semibold rounded-lg hover:bg-danger/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            >
+              {isResetting ? 'Resetting…' : 'Yes, reset'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(false)}
+              className="px-3 py-1.5 border border-border text-foreground text-xs font-semibold rounded-lg hover:bg-background transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowResetConfirm(true)}
+            className="px-5 py-2.5 border border-border text-muted text-sm font-medium rounded-lg hover:bg-background hover:text-foreground transition-colors"
+          >
+            Reset to Defaults
+          </button>
+        )}
+      </div>
 
       {/* Strict Rest Lock warning modal */}
       {showStrictWarning ? (

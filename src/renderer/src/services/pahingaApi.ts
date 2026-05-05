@@ -5,6 +5,7 @@ import type {
   DashboardToday,
   StretchLog,
   StretchType,
+  SummaryResponse,
   UserSettings,
   UserSettingsUpdate,
   WaterReminderTriggerPayload
@@ -24,6 +25,10 @@ export const pahingaApi = {
 
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return getPahinga().updateSettings(patch)
+  },
+
+  resetSettingsToDefaults(): Promise<UserSettings> {
+    return getPahinga().resetSettingsToDefaults()
   },
 
   pickOverlayMedia(): Promise<string | null> {
@@ -113,6 +118,18 @@ export const pahingaApi = {
 
   stretchGetToday(): Promise<StretchLog[]> {
     return getPahinga().stretchGetToday()
+  },
+
+  summaryGetToday(): Promise<SummaryResponse> {
+    return getPahinga().summaryGetToday()
+  },
+
+  summaryGetYesterday(): Promise<SummaryResponse> {
+    return getPahinga().summaryGetYesterday()
+  },
+
+  summaryGetLastSevenDays(): Promise<SummaryResponse> {
+    return getPahinga().summaryGetLastSevenDays()
   },
 
   overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload> {

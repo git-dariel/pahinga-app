@@ -8,6 +8,7 @@ import {
   SESSION_IPC_CHANNELS,
   SETTINGS_IPC_CHANNELS,
   STRETCH_IPC_CHANNELS,
+  SUMMARY_IPC_CHANNELS,
   WATER_REMINDER_IPC_CHANNELS
 } from '../../shared/ipc'
 import type {
@@ -25,6 +26,7 @@ import { createBreakReminderScheduler } from '../services/breakReminderScheduler
 import { createWaterReminderActions } from '../services/waterReminderActions'
 import { createWaterReminderScheduler } from '../services/waterReminderScheduler'
 import { createStretchService } from '../services/stretchService'
+import { createSummaryService } from '../services/summaryService'
 import {
   BREAK_OVERLAY_MESSAGE,
   BREAK_REMINDER_NOTIFICATION_BODY,
@@ -84,7 +86,16 @@ export function registerPahingaIpc(
   const breakReminderActions = createBreakReminderActions(reminderRepo)
   const waterReminderActions = createWaterReminderActions(reminderRepo)
   const stretchService = createStretchService(stretchRepo)
+  const summaryService = createSummaryService(focusRepo, reminderRepo, stretchRepo)
   const breakOverlayService = createBreakOverlayService({ getMainWindow })
+
+  // Sync startup login item with the stored preference on every app init.
+  try {
+    const currentSettings = settingsService.get()
+    app.setLoginItemSettings({ openAtLogin: currentSettings.startupEnabled })
+  } catch {
+    // setLoginItemSettings may throw in dev/unsupported environments.
+  }
 
   function openBreakOverlay(reason: BreakOverlayOpenReason): BreakOverlayTriggerPayload {
     const settings = settingsService.get()
@@ -183,6 +194,9 @@ export function registerPahingaIpc(
   ipcMain.removeHandler(WATER_REMINDER_IPC_CHANNELS.SKIP)
   ipcMain.removeHandler(STRETCH_IPC_CHANNELS.COMPLETE)
   ipcMain.removeHandler(STRETCH_IPC_CHANNELS.GET_TODAY)
+  ipcMain.removeHandler(SUMMARY_IPC_CHANNELS.GET_TODAY)
+  ipcMain.removeHandler(SUMMARY_IPC_CHANNELS.GET_YESTERDAY)
+  ipcMain.removeHandler(SUMMARY_IPC_CHANNELS.GET_LAST_SEVEN_DAYS)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.OPEN_BREAK)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.CLOSE_BREAK)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.START_BREAK)
@@ -191,13 +205,34 @@ export function registerPahingaIpc(
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.COMPLETE_BREAK)
   ipcMain.removeHandler(OVERLAY_IPC_CHANNELS.GET_BREAK_PAYLOAD)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.PICK_OVERLAY_MEDIA)
+  ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.RESET_TO_DEFAULTS)
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.GET, () => {
     return settingsService.get()
   })
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.UPDATE, (_event, patch: unknown) => {
-    return settingsService.update(patch)
+    const updated = settingsService.update(patch)
+    if (app.isPackaged || process.platform !== 'linux') {
+      try {
+        app.setLoginItemSettings({ openAtLogin: updated.startupEnabled })
+      } catch {
+        // setLoginItemSettings is unsupported on some platforms — ignore silently.
+      }
+    }
+    return updated
+  })
+
+  ipcMain.handle(SETTINGS_IPC_CHANNELS.RESET_TO_DEFAULTS, () => {
+    const reset = settingsService.resetToDefaults()
+    if (app.isPackaged || process.platform !== 'linux') {
+      try {
+        app.setLoginItemSettings({ openAtLogin: false })
+      } catch {
+        // ignore
+      }
+    }
+    return reset
   })
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE, () => {
@@ -316,6 +351,18 @@ export function registerPahingaIpc(
 
   ipcMain.handle(STRETCH_IPC_CHANNELS.GET_TODAY, () => {
     return stretchService.getToday()
+  })
+
+  ipcMain.handle(SUMMARY_IPC_CHANNELS.GET_TODAY, () => {
+    return summaryService.getToday()
+  })
+
+  ipcMain.handle(SUMMARY_IPC_CHANNELS.GET_YESTERDAY, () => {
+    return summaryService.getYesterday()
+  })
+
+  ipcMain.handle(SUMMARY_IPC_CHANNELS.GET_LAST_SEVEN_DAYS, () => {
+    return summaryService.getLastSevenDays()
   })
 
   ipcMain.handle(OVERLAY_IPC_CHANNELS.OPEN_BREAK, (_event, rawReason: unknown) => {

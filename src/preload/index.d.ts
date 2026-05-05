@@ -6,6 +6,7 @@ import type {
   DashboardToday,
   StretchLog,
   StretchType,
+  SummaryResponse,
   UserSettings,
   UserSettingsUpdate,
   WaterReminderTriggerPayload
@@ -14,6 +15,7 @@ import type {
 export interface PahingaPreloadApi {
   getSettings(): Promise<UserSettings>
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings>
+  resetSettingsToDefaults(): Promise<UserSettings>
   pickOverlayMedia(): Promise<string | null>
   isOnboardingComplete(): Promise<boolean>
   getDashboardToday(): Promise<DashboardToday>
@@ -33,6 +35,9 @@ export interface PahingaPreloadApi {
   onWaterReminderTrigger(callback: (payload: WaterReminderTriggerPayload) => void): () => void
   stretchComplete(stretchType: StretchType, durationSeconds: number): Promise<StretchLog>
   stretchGetToday(): Promise<StretchLog[]>
+  summaryGetToday(): Promise<SummaryResponse>
+  summaryGetYesterday(): Promise<SummaryResponse>
+  summaryGetLastSevenDays(): Promise<SummaryResponse>
   overlayOpenBreak(reason: BreakOverlayOpenReason): Promise<BreakOverlayTriggerPayload>
   overlayCloseBreak(): Promise<boolean>
   overlayStartBreak(reminderId: number): Promise<boolean>
