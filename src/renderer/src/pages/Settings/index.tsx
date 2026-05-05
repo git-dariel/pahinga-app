@@ -8,6 +8,7 @@ import {
 import type { DesktopNotificationStatus, NotificationPreviewKind } from '@shared/types'
 import type { OverlayMode } from '@shared/types/user-settings'
 import { useToast } from '@renderer/components/Toast/ToastProvider'
+import { Button, Card, PageShell, Select, Toggle } from '@renderer/components/ui'
 import { useUserSettings } from '@renderer/hooks/useUserSettings'
 import { pahingaApi } from '@renderer/services/pahingaApi'
 
@@ -22,35 +23,6 @@ const OVERLAY_MODES = [
   { value: 'focused_break_overlay', label: 'Focused Break Overlay' },
   { value: 'strict_rest_lock', label: 'Strict Rest Lock' }
 ] as const
-
-function Toggle({
-  pressed,
-  onPressedChange,
-  label
-}: {
-  pressed: boolean
-  onPressedChange: (next: boolean) => void
-  label: string
-}): React.JSX.Element {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={pressed}
-      aria-label={label}
-      onClick={() => onPressedChange(!pressed)}
-      className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
-        pressed ? 'bg-primary' : 'bg-border'
-      }`}
-    >
-      <span
-        className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${
-          pressed ? 'right-1' : 'left-1'
-        }`}
-      />
-    </button>
-  )
-}
 
 export default function Settings(): React.JSX.Element {
   const { data, status, error, reload, save } = useUserSettings()
@@ -274,19 +246,18 @@ export default function Settings(): React.JSX.Element {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm text-muted mt-1">Customize your reminders and preferences.</p>
-      </div>
-
+    <PageShell
+      title="Settings"
+      description="Customize your reminders and preferences."
+      className="max-w-3xl"
+    >
       {error && data ? (
         <div className="mb-4 max-w-lg rounded-lg border border-warning/40 bg-surface px-4 py-3 text-sm text-warning">
           {error.message}
         </div>
       ) : null}
 
-      <div className="bg-surface border border-border rounded-xl divide-y divide-border max-w-lg">
+      <Card className="max-w-lg divide-y divide-border">
         <div className="px-6 py-5">
           <p className="text-sm font-semibold text-foreground mb-4">Focus & Breaks</p>
           <div className="space-y-4">
@@ -295,8 +266,8 @@ export default function Settings(): React.JSX.Element {
                 <p className="text-sm font-medium text-foreground">Focus Duration</p>
                 <p className="text-xs text-muted">Default session length</p>
               </div>
-              <select
-                className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-36"
+              <Select
+                className="min-w-36"
                 value={focusMinutes}
                 onChange={(e) => setFocusMinutes(Number(e.target.value))}
               >
@@ -307,7 +278,7 @@ export default function Settings(): React.JSX.Element {
                     </option>
                   )
                 )}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -315,8 +286,8 @@ export default function Settings(): React.JSX.Element {
                 <p className="text-sm font-medium text-foreground">Break Duration</p>
                 <p className="text-xs text-muted">How long each break lasts</p>
               </div>
-              <select
-                className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-36"
+              <Select
+                className="min-w-36"
                 value={breakMinutes}
                 onChange={(e) => setBreakMinutes(Number(e.target.value))}
               >
@@ -327,7 +298,7 @@ export default function Settings(): React.JSX.Element {
                     </option>
                   )
                 )}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -335,8 +306,8 @@ export default function Settings(): React.JSX.Element {
                 <p className="text-sm font-medium text-foreground">Break Reminder Interval</p>
                 <p className="text-xs text-muted">How often to remind you to take a break</p>
               </div>
-              <select
-                className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-36"
+              <Select
+                className="min-w-36"
                 value={breakReminderMinutes}
                 onChange={(e) => setBreakReminderMinutes(Number(e.target.value))}
               >
@@ -348,7 +319,7 @@ export default function Settings(): React.JSX.Element {
                     {m} minutes
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         </div>
@@ -361,8 +332,8 @@ export default function Settings(): React.JSX.Element {
                 <p className="text-sm font-medium text-foreground">Water Reminder</p>
                 <p className="text-xs text-muted">Remind me to drink water every</p>
               </div>
-              <select
-                className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-36"
+              <Select
+                className="min-w-36"
                 value={waterMinutes}
                 onChange={(e) => setWaterMinutes(Number(e.target.value))}
               >
@@ -373,7 +344,7 @@ export default function Settings(): React.JSX.Element {
                     </option>
                   )
                 )}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -419,28 +390,30 @@ export default function Settings(): React.JSX.Element {
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   disabled={
                     previewingNotification !== null ||
                     notificationStatus?.permissionStatus !== 'ready'
                   }
                   onClick={() => void handlePreviewNotification('break')}
-                  className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-surface disabled:opacity-50 disabled:pointer-events-none"
+                  className="min-h-8 px-3 py-1.5 text-xs"
                 >
                   {previewingNotification === 'break' ? 'Sending...' : 'Preview Break'}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
                   disabled={
                     previewingNotification !== null ||
                     notificationStatus?.permissionStatus !== 'ready'
                   }
                   onClick={() => void handlePreviewNotification('water')}
-                  className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-surface disabled:opacity-50 disabled:pointer-events-none"
+                  className="min-h-8 px-3 py-1.5 text-xs"
                 >
                   {previewingNotification === 'water' ? 'Sending...' : 'Preview Water'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -482,8 +455,8 @@ export default function Settings(): React.JSX.Element {
                 <p className="text-sm font-medium text-foreground">Overlay Mode</p>
                 <p className="text-xs text-muted">Focused Break Overlay is recommended for MVP</p>
               </div>
-              <select
-                className="text-sm border border-border rounded-lg px-3 py-1.5 text-foreground bg-background min-w-44"
+              <Select
+                className="min-w-44"
                 value={pendingStrictConfirm ? 'strict_rest_lock' : overlayMode}
                 onChange={(e) => handleOverlayModeChange(e.target.value as OverlayMode)}
               >
@@ -492,7 +465,7 @@ export default function Settings(): React.JSX.Element {
                     {m.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -524,7 +497,7 @@ export default function Settings(): React.JSX.Element {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       <div className="mt-5 flex items-center gap-3">
         <button
@@ -610,6 +583,6 @@ export default function Settings(): React.JSX.Element {
           </div>
         </div>
       ) : null}
-    </div>
+    </PageShell>
   )
 }

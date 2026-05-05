@@ -428,35 +428,35 @@ The user should feel guided, not trapped.
 
 ## Frontend TODO
 
-- [ ] Apply consistent spacing across pages.
-- [ ] Apply consistent card components.
-- [ ] Add button variants:
-  - [ ] Primary
-  - [ ] Secondary
-  - [ ] Ghost
-  - [ ] Danger
-- [ ] Add modal component.
-- [ ] Add input component.
-- [ ] Add select component.
-- [ ] Add toggle component.
-- [ ] Add loading state component.
-- [ ] Add empty state component.
-- [ ] Add responsive layout for small desktop windows.
-- [ ] Add calm micro-interactions.
-- [ ] Review font sizes.
-- [ ] Review color contrast.
-- [ ] Remove unnecessary visual clutter.
+- [x] Apply consistent spacing across pages.
+- [x] Apply consistent card components.
+- [x] Add button variants:
+  - [x] Primary
+  - [x] Secondary
+  - [x] Ghost
+  - [x] Danger
+- [x] Add modal component.
+- [x] Add input component.
+- [x] Add select component.
+- [x] Add toggle component.
+- [x] Add loading state component.
+- [x] Add empty state component.
+- [x] Add responsive layout for small desktop windows.
+- [x] Add calm micro-interactions.
+- [x] Review font sizes.
+- [x] Review color contrast.
+- [x] Remove unnecessary visual clutter.
 
 ## Backend TODO
 
-- [ ] Review IPC handler naming.
-- [ ] Review service naming.
-- [ ] Review repository naming.
-- [ ] Add consistent error response format.
-- [ ] Add logs for main process errors.
-- [ ] Add safe fallback for database errors.
-- [ ] Add app version information.
-- [ ] Add environment detection for development and production.
+- [x] Review IPC handler naming.
+- [x] Review service naming.
+- [x] Review repository naming.
+- [x] Add consistent error response format.
+- [x] Add logs for main process errors.
+- [x] Add safe fallback for database errors.
+- [x] Add app version information.
+- [x] Add environment detection for development and production.
 
 ---
 

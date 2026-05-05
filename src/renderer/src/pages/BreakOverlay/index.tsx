@@ -20,6 +20,13 @@ export default function BreakOverlay(): React.JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
+    document.documentElement.classList.add('pahinga-overlay')
+    return () => {
+      document.documentElement.classList.remove('pahinga-overlay')
+    }
+  }, [])
+
+  useEffect(() => {
     void pahingaApi.getNekoUrls().then(setNekoUrls)
   }, [])
 
@@ -108,7 +115,7 @@ export default function BreakOverlay(): React.JSX.Element {
 
   if (!payload) {
     return (
-      <div className="h-screen w-screen bg-black/30 text-white flex items-center justify-center">
+      <div className="h-screen w-screen bg-transparent text-white flex items-center justify-center">
         <p className="text-sm text-white/85">Preparing break overlay…</p>
       </div>
     )
@@ -122,7 +129,10 @@ export default function BreakOverlay(): React.JSX.Element {
       <div className="absolute inset-0 bg-linear-to-r from-black/60 via-black/20 to-transparent pointer-events-none z-10" />
 
       {/* Neko video — large, right side, anchored to bottom */}
-      <div className="absolute right-0 bottom-0 h-full flex items-end justify-end z-0" style={{ width: '65%' }}>
+      <div
+        className="absolute right-0 bottom-0 h-full flex items-end justify-end z-0"
+        style={{ width: '65%' }}
+      >
         <video
           ref={videoRef}
           muted
@@ -133,7 +143,10 @@ export default function BreakOverlay(): React.JSX.Element {
       </div>
 
       {/* Content panel — left side */}
-      <div className="absolute left-0 inset-y-0 flex flex-col justify-center px-10 z-20" style={{ width: '50%' }}>
+      <div
+        className="absolute left-0 inset-y-0 flex flex-col justify-center px-10 z-20"
+        style={{ width: '50%' }}
+      >
         <p className="text-xs uppercase tracking-widest text-cyan-300/80 font-medium">
           {payload.suggestedType}
         </p>

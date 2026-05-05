@@ -25,3 +25,4 @@ export type {
   NotificationPreviewKind,
   TrayStatus
 } from './desktop-notification'
+export type { AppEnvironment, AppInfo } from './app-info'

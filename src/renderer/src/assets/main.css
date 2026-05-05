@@ -28,3 +28,26 @@ body,
   padding: 0;
   font-family: var(--font-family-sans);
 }
+
+body {
+  color: var(--color-foreground);
+  text-rendering: optimizeLegibility;
+}
+
+html.pahinga-overlay,
+html.pahinga-overlay body,
+html.pahinga-overlay #root {
+  background: transparent;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-foreground);
+}

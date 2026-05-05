@@ -89,4 +89,9 @@ export const TRAY_IPC_CHANNELS = {
   GET_STATUS: 'tray:getStatus'
 } as const
 
+/** Phase 12 app metadata and environment detection. */
+export const APP_IPC_CHANNELS = {
+  GET_INFO: 'app:getInfo'
+} as const
+
 export type UserSettingsUpdatePayload = UserSettingsUpdate

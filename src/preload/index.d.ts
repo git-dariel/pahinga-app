@@ -1,5 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
+  AppInfo,
   BreakOverlayOpenReason,
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
@@ -16,6 +17,7 @@ import type {
 } from '../shared/types'
 
 export interface PahingaPreloadApi {
+  getAppInfo(): Promise<AppInfo>
   getSettings(): Promise<UserSettings>
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings>
   resetSettingsToDefaults(): Promise<UserSettings>

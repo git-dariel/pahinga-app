@@ -1,4 +1,5 @@
 import type {
+  AppInfo,
   BreakOverlayOpenReason,
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
@@ -24,6 +25,10 @@ function getPahinga(): Window['api']['pahinga'] {
 export const pahingaApi = {
   getSettings(): Promise<UserSettings> {
     return getPahinga().getSettings()
+  },
+
+  getAppInfo(): Promise<AppInfo> {
+    return getPahinga().getAppInfo()
   },
 
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {

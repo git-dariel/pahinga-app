@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { getDatabase, closeDatabase } from './database/connection'
 import { registerPahingaIpc } from './ipc/registerPahingaIpc'
+import { logger } from './utils/logger'
 
 let mainWindowRef: BrowserWindow | null = null
 let isQuitting = false
@@ -55,6 +56,7 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  logger.info('Electron app ready.')
   electronApp.setAppUserModelId('com.pahinga.app')
 
   const db = getDatabase()
@@ -75,6 +77,18 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   isQuitting = true
+})
+
+app.on('render-process-gone', (_event, _webContents, details) => {
+  logger.error(`Renderer process exited: ${details.reason}`)
+})
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught main process exception.', error)
+})
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled main process rejection.', reason)
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

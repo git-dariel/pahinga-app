@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, type OpenDialogOptions } from 'electron'
 import type Database from 'better-sqlite3'
 import {
+  APP_IPC_CHANNELS,
   BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
   NOTIFICATION_IPC_CHANNELS,
@@ -42,6 +43,8 @@ import { createSettingsService } from '../services/settingsService'
 import { createDesktopNotificationService } from '../services/desktopNotificationService'
 import { createTrayService } from '../services/trayService'
 import { nowIso } from '../database/timestamps'
+import { getAppInfo } from '../utils/appInfo'
+import { normalizeIpcError } from './ipcError'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -209,6 +212,7 @@ export function registerPahingaIpc(
   trayService.create()
 
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.GET)
+  ipcMain.removeHandler(APP_IPC_CHANNELS.GET_INFO)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.UPDATE)
   ipcMain.removeHandler(SETTINGS_IPC_CHANNELS.IS_ONBOARDING_COMPLETE)
   ipcMain.removeHandler(DASHBOARD_IPC_CHANNELS.GET_TODAY)
@@ -241,6 +245,23 @@ export function registerPahingaIpc(
   ipcMain.removeHandler(NOTIFICATION_IPC_CHANNELS.GET_STATUS)
   ipcMain.removeHandler(NOTIFICATION_IPC_CHANNELS.PREVIEW)
   ipcMain.removeHandler(TRAY_IPC_CHANNELS.GET_STATUS)
+
+  function handleIpc<TArgs extends unknown[], TResult>(
+    channel: string,
+    handler: (...args: TArgs) => TResult
+  ): void {
+    ipcMain.handle(channel, (_event, ...args: TArgs) => {
+      try {
+        return handler(...args)
+      } catch (error) {
+        throw normalizeIpcError(channel, error)
+      }
+    })
+  }
+
+  handleIpc(APP_IPC_CHANNELS.GET_INFO, () => {
+    return getAppInfo()
+  })
 
   ipcMain.handle(SETTINGS_IPC_CHANNELS.GET, () => {
     return settingsService.get()

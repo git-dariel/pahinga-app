@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LayoutDashboard, Timer, Activity, BarChart2, Settings } from 'lucide-react'
+import type { AppInfo } from '@shared/types'
 import type { BreakReminderTriggerPayload, WaterReminderTriggerPayload } from '@shared/types'
 import { BreakReminderModal } from '@renderer/components/BreakReminderModal'
 import { WaterReminderModal } from '@renderer/components/WaterReminderModal'
@@ -17,6 +18,7 @@ const navItems = [
 export default function Layout(): React.JSX.Element {
   const [breakReminder, setBreakReminder] = useState<BreakReminderTriggerPayload | null>(null)
   const [waterReminder, setWaterReminder] = useState<WaterReminderTriggerPayload | null>(null)
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
 
   useEffect(() => {
     return pahingaApi.onBreakReminderTrigger((payload) => setBreakReminder(payload))
@@ -24,6 +26,21 @@ export default function Layout(): React.JSX.Element {
 
   useEffect(() => {
     return pahingaApi.onWaterReminderTrigger((payload) => setWaterReminder(payload))
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    void pahingaApi
+      .getAppInfo()
+      .then((info) => {
+        if (mounted) setAppInfo(info)
+      })
+      .catch(() => {
+        if (mounted) setAppInfo(null)
+      })
+    return () => {
+      mounted = false
+    }
   }, [])
 
   return (
@@ -54,7 +71,7 @@ export default function Layout(): React.JSX.Element {
         </nav>
 
         <div className="px-6 py-4 border-t border-border">
-          <p className="text-xs text-muted">v0.1.0</p>
+          <p className="text-xs text-muted">v{appInfo?.version ?? '0.1.0'}</p>
         </div>
       </aside>
 

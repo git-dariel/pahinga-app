@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import {
+  APP_IPC_CHANNELS,
   BREAK_OVERLAY_EVENT,
   BREAK_REMINDER_EVENT,
   DASHBOARD_IPC_CHANNELS,
@@ -19,6 +20,7 @@ import type {
   BreakOverlayOpenReason,
   BreakOverlayTriggerPayload,
   BreakReminderTriggerPayload,
+  AppInfo,
   DashboardToday,
   DesktopNotificationStatus,
   NotificationPreviewKind,
@@ -34,6 +36,9 @@ import type {
 const pahinga = {
   getSettings(): Promise<UserSettings> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.GET)
+  },
+  getAppInfo(): Promise<AppInfo> {
+    return ipcRenderer.invoke(APP_IPC_CHANNELS.GET_INFO)
   },
   updateSettings(patch: UserSettingsUpdate): Promise<UserSettings> {
     return ipcRenderer.invoke(SETTINGS_IPC_CHANNELS.UPDATE, patch)
