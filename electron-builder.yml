@@ -14,6 +14,7 @@ asarUnpack:
   - resources/**
 win:
   executableName: pahinga
+  icon: build/icon.ico
 nsis:
   artifactName: pahinga-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -22,7 +23,11 @@ nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
 mac:
+  icon: build/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -33,6 +38,7 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
+  icon: build/icon.png
   target:
     - AppImage
     - snap
