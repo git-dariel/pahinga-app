@@ -3,7 +3,6 @@ import { NavLink, Outlet } from 'react-router-dom'
 import {
   Activity,
   BarChart2,
-  Droplet,
   Eye,
   LayoutDashboard,
   Maximize2,
@@ -21,6 +20,7 @@ import { BreakReminderModal } from '@renderer/components/BreakReminderModal'
 import { WaterReminderModal } from '@renderer/components/WaterReminderModal'
 import { cn } from '@renderer/lib/cn'
 import { pahingaApi } from '@renderer/services/pahingaApi'
+import appIcon from '../../../../resources/icon.png'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -33,12 +33,8 @@ const navItems = [
 function AppTitleBar(): React.JSX.Element {
   return (
     <div className="app-drag flex h-9 shrink-0 items-center justify-between bg-[#13241b] px-3 text-[#dfe8df]">
-      <div className="flex items-center gap-3">
-        <div className="flex gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-          <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-          <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-        </div>
+      <div className="flex items-center gap-2">
+        <img src={appIcon} alt="Pahinga logo" className="h-4 w-4 object-contain" />
         <p className="text-xs font-semibold text-white/70">Pahinga</p>
       </div>
       <div className="app-no-drag flex items-center gap-5 text-white/70">
@@ -98,8 +94,8 @@ export default function Layout(): React.JSX.Element {
       <AppTitleBar />
       <div className="flex min-h-0 flex-1">
         <aside className="relative flex w-16 shrink-0 flex-col items-center border-r border-border/70 bg-[#fbfaf6] py-5">
-          <div className="mb-7 grid h-9 w-9 place-items-center rounded-lg bg-primary text-white">
-            <Droplet className="h-5 w-5 fill-white/90" aria-hidden />
+          <div className="mb-7 grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-primary-soft">
+            <img src={appIcon} alt="Pahinga logo" className="h-6 w-6 object-contain" />
           </div>
 
           <nav className="flex flex-1 flex-col items-center gap-3">

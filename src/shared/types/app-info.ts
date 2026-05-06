@@ -6,4 +6,5 @@ export interface AppInfo {
   environment: AppEnvironment
   platform: NodeJS.Platform
   packaged: boolean
+  iconPath: string
 }
