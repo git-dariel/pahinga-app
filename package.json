@@ -1,6 +1,6 @@
 {
   "name": "pahinga-app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Pahinga desktop focus and wellness companion",
   "main": "./out/main/index.js",
   "author": "Pahinga Team",
