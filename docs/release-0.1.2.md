@@ -13,6 +13,19 @@ Output installer path:
 release/0.1.2/pahinga-0.1.2-setup.exe
 ```
 
+## Build Microsoft Store Package (APPX)
+
+```bash
+pnpm install
+pnpm build:store
+```
+
+Expected output path (upload to Partner Center):
+
+```text
+release/0.1.2/pahinga-0.1.2.appx
+```
+
 ## Optional Quick Checks
 
 ```bash

@@ -15,6 +15,13 @@ asarUnpack:
 win:
   executableName: pahinga
   icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: appx
+      arch:
+        - x64
 nsis:
   artifactName: pahinga-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -26,6 +33,14 @@ nsis:
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
   installerHeaderIcon: build/icon.ico
+appx:
+  identityName: PahingaTeam.Pahinga
+  publisher: CN=E7CAD21E-7659-40A1-A4CA-86B708859A12
+  publisherDisplayName: Pahinga Team
+  applicationId: Pahinga
+  backgroundColor: transparent
+  displayName: Pahinga
+  artifactName: pahinga-${version}.${ext}
 mac:
   icon: build/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
